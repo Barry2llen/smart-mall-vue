@@ -1,0 +1,34 @@
+
+> smart-mall-vue@0.0.0 lint
+> run-s lint:*
+
+
+> smart-mall-vue@0.0.0 lint:oxlint
+> oxlint . --fix
+
+Found 0 warnings and 0 errors.
+Finished in 9ms on 15 files with 101 rules using 16 threads.
+
+> smart-mall-vue@0.0.0 lint:eslint
+> eslint . --fix --cache
+
+
+C:\springcloud\shop\smart-mall-vue\src\api\auth.ts
+  15:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\springcloud\shop\smart-mall-vue\src\views\login\Login.vue
+   1:1   error  Component name "Login" should always be multi-word  vue/multi-word-component-names
+  64:19  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+
+C:\springcloud\shop\smart-mall-vue\src\views\register\Register.vue
+    1:1   error  Component name "Register" should always be multi-word  vue/multi-word-component-names
+   74:34  error  'authLogin' is defined but never used                  @typescript-eslint/no-unused-vars
+  104:19  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  134:19  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+鉁?11 problems (11 errors, 0 warnings)
+

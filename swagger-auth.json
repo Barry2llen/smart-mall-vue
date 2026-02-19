@@ -125,6 +125,64 @@
                     }
                 }
             }
+        },
+        "/test": {
+            "get": {
+                "tags": [
+                    "登录注册"
+                ],
+                "operationId": "test",
+                "parameters": [
+                    {
+                        "name": "X-User-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh": {
+            "get": {
+                "tags": [
+                    "token管理"
+                ],
+                "description": "刷新获取access token",
+                "operationId": "refresh",
+                "parameters": [
+                    {
+                        "name": "refreshToken",
+                        "in": "query",
+                        "description": "刷新token"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -190,6 +248,10 @@
                 "description": "用户注册信息"
             },
             "UserLogin": {
+                "required": [
+                    "password",
+                    "username"
+                ],
                 "type": "object",
                 "properties": {
                     "username": {

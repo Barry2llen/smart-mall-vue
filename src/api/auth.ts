@@ -14,7 +14,7 @@ export interface UserRegister {
 }
 
 export interface RObject<T = unknown> {
-  code?: string
+  code?: string | number
   msg?: string
   data?: T
 }
@@ -45,4 +45,18 @@ export function authLogin(data: UserLogin) {
 
 export function authRegister(data: UserRegister) {
   return request.post<any, RObject>(`${AUTH_API}/register`, data)
+}
+
+export function authLoginByGithubCode(code: string, state: string) {
+  return request.get(`${AUTH_API}/login/oauth2/code/github`, {
+    params: { code, state },
+  })
+}
+
+export function getCurrentUserId() {
+  return request.get<string, string>(`${AUTH_API}/test`)
+}
+
+export function logout() {
+  return request.post(`${AUTH_API}/logout`)
 }

@@ -1,21 +1,49 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios'
-import type { AxiosInstance, AxiosResponse } from 'axios'
+import type {
+  AxiosInstance,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+  AxiosRequestHeaders,
+} from 'axios'
+
+const ACCESS_TOKEN_KEY = 'access_token'
+
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean
+  _skipAuthRefresh?: boolean
+}
+
+const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY)
+
+const saveAccessTokenFromHeaders = (headers?: AxiosResponse['headers']) => {
+  const authorization = headers?.authorization || headers?.Authorization
+  if (!authorization || typeof authorization !== 'string') {
+    return
+  }
+
+  const [type, token] = authorization.split(' ')
+  if (type?.toLowerCase() === 'bearer' && token) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, token)
+  }
+}
 
 // Create axios instance
 const service: AxiosInstance = axios.create({
   baseURL: '/api', // Proxy will handle /api -> http://localhost:8080 (or appropriate backend)
   timeout: 10000,
+  withCredentials: true,
 })
 
 // Request interceptor
 service.interceptors.request.use(
-  (config) => {
-    // You can add headers here, e.g., token
-    // const token = localStorage.getItem('token')
-    // if (token) {
-    //   config.headers['Authorization'] = `Bearer ${token}`
-    // }
+  (config: CustomAxiosRequestConfig) => {
+    const token = getAccessToken()
+    if (token) {
+      config.headers = (config.headers || {}) as AxiosRequestHeaders
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
     return config
   },
   (error: any) => {
@@ -23,10 +51,32 @@ service.interceptors.request.use(
   },
 )
 
+let refreshTokenPromise: Promise<void> | null = null
+
+const refreshAccessToken = async () => {
+  if (!refreshTokenPromise) {
+    refreshTokenPromise = service
+      .get('/auth/refresh', { _skipAuthRefresh: true } as CustomAxiosRequestConfig)
+      .then(() => undefined)
+      .finally(() => {
+        refreshTokenPromise = null
+      })
+  }
+
+  return refreshTokenPromise
+}
+
 // Response interceptor
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    saveAccessTokenFromHeaders(response.headers)
     const res = response.data
+    if (typeof res === 'string') {
+      const htmlLike = /^\s*<!doctype html>|^\s*<html[\s>]/i.test(res)
+      if (htmlLike) {
+        return Promise.reject(new Error('未登录或接口返回了非预期页面'))
+      }
+    }
     // You can handle custom error codes here if your backend returns { code: ..., data: ... }
     // For now, we return the data directly or the full response depending on convention
     // Based on swagger RObject, we might want to check res.code
@@ -38,11 +88,38 @@ service.interceptors.response.use(
     return res
   },
   (error: any) => {
+    const originalConfig = error?.config as CustomAxiosRequestConfig | undefined
+    const status = error?.response?.status
+
+    if (
+      status === 401 &&
+      originalConfig &&
+      !originalConfig._retry &&
+      !originalConfig._skipAuthRefresh &&
+      !`${originalConfig.url || ''}`.includes('/auth/refresh')
+    ) {
+      originalConfig._retry = true
+
+      return refreshAccessToken()
+        .then(() => {
+          const latestToken = getAccessToken()
+          if (latestToken) {
+            originalConfig.headers = (originalConfig.headers || {}) as AxiosRequestHeaders
+            originalConfig.headers.Authorization = `Bearer ${latestToken}`
+          }
+
+          return service(originalConfig)
+        })
+        .catch(() => {
+          localStorage.removeItem(ACCESS_TOKEN_KEY)
+          return Promise.reject(new Error('登录已过期，请重新登录'))
+        })
+    }
+
     const backendMsg =
       error?.response?.data?.msg ||
       error?.response?.data?.message ||
       error?.response?.data?.error
-    const status = error?.response?.status
     const statusText = error?.response?.statusText
     const finalMsg =
       backendMsg ||

@@ -46,6 +46,13 @@
               {{ loading ? '登录中...' : '立即登录' }}
             </button>
 
+            <div class="social-login">
+              <p class="social-title">社交登录</p>
+              <button class="social-icon-btn" type="button" @click="handleGithubLogin" title="GitHub 登录">
+                <img src="/svg/github.svg" alt="GitHub 登录" />
+              </button>
+            </div>
+
             <div class="error-msg" v-if="errorMessage">{{ errorMessage }}</div>
           </form>
 
@@ -87,6 +94,10 @@ const handleLogin = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleGithubLogin = () => {
+  window.location.href = '/api/auth/oauth2/authorization/github'
 }
 </script>
 
@@ -243,6 +254,44 @@ input:focus {
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.social-login {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.social-title {
+  margin: 0;
+  color: #7a8ea8;
+  font-size: 13px;
+}
+
+.social-icon-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #d7e2f0;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.social-icon-btn img {
+  width: 22px;
+  height: 22px;
+}
+
+.social-icon-btn:hover {
+  border-color: #a8bfdc;
+  background: #f5f8fc;
+  transform: translateY(-1px);
 }
 
 .submit-btn:hover:not(:disabled) {

@@ -354,467 +354,625 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="cart-page">
-    <section class="cart-wrap">
+    <div class="cart-container">
       <header class="cart-header">
-        <h1>我的购物车</h1>
-        <button class="reload-btn" type="button" @click="handleRefresh" :disabled="loading">刷新</button>
+        <h1 class="page-title">购物车</h1>
+        <button class="btn-refresh" type="button" @click="handleRefresh" :disabled="loading">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          刷新
+        </button>
       </header>
-      <p v-if="actionMessage" class="action-message">{{ actionMessage }}</p>
 
-      <div v-if="loading" class="state-box">正在加载购物车...</div>
-      <div v-else-if="errorMessage" class="state-box error-box">{{ errorMessage }}</div>
-      <div v-else-if="!cart || !cart.items || cart.items.length === 0" class="state-box">
-        购物车还是空的，快去逛逛吧
+      <div v-if="actionMessage" class="toast-message error">{{ actionMessage }}</div>
+
+      <div v-if="loading" class="empty-state">
+        <div class="spinner"></div>
+        <p>正在加载购物车...</p>
       </div>
+      
+      <div v-else-if="errorMessage" class="empty-state error">
+        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <div v-else-if="!cart || !cart.items || cart.items.length === 0" class="empty-state">
+        <svg viewBox="0 0 24 24" width="64" height="64" stroke="#dcdfe6" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <p>购物车空空如也，快去挑点宝贝吧</p>
+      </div>
+
       <template v-else>
-        <section class="cart-list has-bottom-bar">
+        <div class="cart-list has-bottom-bar">
           <article v-for="item in cart.items" :key="item.skuId" class="cart-item">
-            <img class="item-image" :src="item.image" :alt="item.title" />
-            <div class="item-main">
-              <div class="item-top">
-                <label class="item-check">
-                  <input
-                    type="checkbox"
-                    :checked="getDisplayedSelected(item)"
-                    :disabled="isPending(item.skuId)"
-                    @change="handleToggleSelected(item)"
-                  />
-                  <span>选中</span>
-                </label>
-                <h2>{{ item.title }}</h2>
+            <label class="item-checkbox">
+              <input
+                type="checkbox"
+                class="custom-checkbox"
+                :checked="getDisplayedSelected(item)"
+                :disabled="isPending(item.skuId)"
+                @change="handleToggleSelected(item)"
+              />
+            </label>
+            
+            <div class="item-image-wrapper">
+              <img class="item-image" :src="item.image" :alt="item.title" />
+            </div>
+
+            <div class="item-info">
+              <div class="item-header">
+                <h2 class="item-title" :title="item.title">{{ item.title }}</h2>
+                <button
+                  class="btn-delete"
+                  type="button"
+                  title="删除商品"
+                  :disabled="isPending(item.skuId)"
+                  @click="handleDelete(item)"
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
               </div>
-              <p class="item-attrs">{{ item.skuAttr?.join(' / ') || '默认规格' }}</p>
-              <div class="item-meta">
-                <span>单价：{{ formatPrice(item.price) }}</span>
-                <div class="count-control">
+              
+              <p class="item-sku">{{ item.skuAttr?.join(' / ') || '默认规格' }}</p>
+              
+              <div class="item-footer">
+                <div class="item-price-wrap">
+                  <span class="price-symbol">¥</span>
+                  <span class="price-value">{{ Number(item.price || 0).toFixed(2) }}</span>
+                </div>
+                
+                <div class="quantity-controller">
                   <button
-                    class="count-btn"
+                    class="btn-qty"
                     type="button"
                     :disabled="isPending(item.skuId) || getDisplayedCount(item) <= 1"
                     @click="handleChangeCount(item, getDisplayedCount(item) - 1)"
                   >
-                    -
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                   </button>
-                  <span class="count-value">{{ getDisplayedCount(item) }}</span>
+                  <span class="qty-input">{{ getDisplayedCount(item) }}</span>
                   <button
-                    class="count-btn"
+                    class="btn-qty"
                     type="button"
                     :disabled="isPending(item.skuId)"
                     @click="handleChangeCount(item, getDisplayedCount(item) + 1)"
                   >
-                    +
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                   </button>
                 </div>
-                <span class="item-total">小计：{{ formatPrice(item.totalPrice) }}</span>
-              </div>
-              <div class="item-actions">
-                <button
-                  class="item-action-btn danger"
-                  type="button"
-                  :disabled="isPending(item.skuId)"
-                  @click="handleDelete(item)"
-                >
-                  删除
-                </button>
               </div>
             </div>
           </article>
-        </section>
+        </div>
 
         <footer class="checkout-bar">
           <div class="checkout-left">
-            <label class="checkout-select-all">
+            <label class="select-all-wrap">
               <input
                 type="checkbox"
+                class="custom-checkbox"
                 :checked="allSelected"
                 :disabled="!cartItems.length"
                 @change="handleToggleAll"
               />
-              <span>全选</span>
+              <span class="select-all-text">全选</span>
             </label>
-            <p class="checkout-text">
-              共 {{ displayCountType }} 种 {{ displayCountNumber }} 件，已选 {{ selectedTypeCount }} 种
-              {{ selectedItemCount }} 件
-            </p>
-            <p class="checkout-reduce">已优惠 {{ formatPrice(displayReduce) }}</p>
-            <p v-if="summarySyncing" class="checkout-sync">同步中...</p>
-          </div>
-          <div class="checkout-right">
-            <div class="checkout-price">
-              <span class="checkout-label">合计：</span>
-              <strong>{{ formatPrice(displayPayableAmount) }}</strong>
+            <div class="summary-info">
+              <span class="summary-text">
+                已选 <strong class="highlight">{{ selectedItemCount }}</strong> 件
+              </span>
+              <span v-if="displayReduce > 0" class="reduce-tag">
+                已减 {{ formatPrice(displayReduce) }}
+              </span>
             </div>
-            <button class="checkout-btn" type="button" :disabled="checkoutDisabled">去结算</button>
+            <span v-if="summarySyncing" class="sync-status">计算中...</span>
+          </div>
+
+          <div class="checkout-right">
+            <div class="total-wrap">
+              <span class="total-label">合计:</span>
+              <div class="total-price">
+                <span class="price-symbol">¥</span>
+                <span class="price-value">{{ Number(displayPayableAmount).toFixed(2) }}</span>
+              </div>
+            </div>
+            <button class="btn-checkout" type="button" :disabled="checkoutDisabled">
+              去结算
+            </button>
           </div>
         </footer>
       </template>
-    </section>
+    </div>
   </main>
 </template>
 
 <style scoped>
+/* 基础变量与全局重置 */
 .cart-page {
   min-height: 100vh;
-  padding: 28px;
-  background: radial-gradient(circle at 0 0, #eaf5ff 0, transparent 36%),
-    radial-gradient(circle at 100% 100%, #fff2df 0, transparent 34%), #f7f9fd;
+  background-color: #f5f7fa;
+  padding: 24px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
 }
 
-.cart-wrap {
-  max-width: 1080px;
+.cart-container {
+  max-width: 900px;
   margin: 0 auto;
-  display: grid;
-  gap: 16px;
 }
 
+/* 头部样式 */
 .cart-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-h1 {
+.page-title {
   margin: 0;
-  color: #183153;
-  font-size: 34px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
-.reload-btn {
-  border: none;
-  border-radius: 10px;
-  height: 40px;
-  min-width: 90px;
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #dcdfe6;
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 700;
-  color: #fff;
+  color: #606266;
   cursor: pointer;
-  background: linear-gradient(135deg, #1178ea, #2f9bfd);
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
-.reload-btn:disabled {
-  background: #9ac7f3;
+.btn-refresh:hover:not(:disabled) {
+  color: #409eff;
+  border-color: #c6e2ff;
+  background-color: #ecf5ff;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-.action-message {
-  margin: 0;
-  color: #d94c4c;
+/* 提示信息与空状态 */
+.toast-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
   font-size: 14px;
+  background-color: #fef0f0;
+  color: #f56c6c;
+  border: 1px solid #fde2e2;
 }
 
-.state-box {
-  border-radius: 16px;
-  border: 1px solid #dde7f4;
-  background: #fff;
-  color: #4f6784;
-  min-height: 120px;
+.empty-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  padding: 80px 0;
+  background: #fff;
+  border-radius: 12px;
+  color: #909399;
+  font-size: 15px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
-.error-box {
-  color: #df4e4e;
+.empty-state.error {
+  color: #f56c6c;
 }
 
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #409eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* 商品列表 */
 .cart-list {
-  display: grid;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .cart-list.has-bottom-bar {
-  padding-bottom: 96px;
+  padding-bottom: 100px;
 }
 
+/* 商品卡片 */
 .cart-item {
-  border-radius: 16px;
-  border: 1px solid #dfebf9;
+  display: flex;
+  align-items: stretch;
   background: #fff;
-  box-shadow: 0 10px 22px rgba(30, 65, 107, 0.08);
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 104px 1fr;
-  gap: 14px;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.3s ease;
+}
+
+.cart-item:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 复选框通用样式 */
+.custom-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #dcdfe6;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  background-color: #fff;
+}
+
+.custom-checkbox:checked {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox:disabled {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+  cursor: not-allowed;
+}
+
+.item-checkbox {
+  display: flex;
+  align-items: center;
+  padding-right: 16px;
+}
+
+/* 商品图片 */
+.item-image-wrapper {
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f4f4f5;
+  border: 1px solid #ebeef5;
 }
 
 .item-image {
-  width: 104px;
-  height: 104px;
-  border-radius: 12px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border: 1px solid #e5edf8;
-  background: #f3f7fd;
 }
 
-.item-main {
-  min-width: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.item-top {
+/* 商品信息区 */
+.item-info {
+  flex: 1;
+  margin-left: 16px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0; /* 防止文本溢出撑破 flex */
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
 }
 
-h2 {
+.item-title {
   margin: 0;
-  font-size: 19px;
-  color: #1f3d62;
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
   line-height: 1.4;
-  flex: 1;
-}
-
-.item-attrs {
-  margin: 0;
-  color: #5f7898;
-  font-size: 14px;
-}
-
-.item-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #355677;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.item-check input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: #1f8bff;
-}
-
-.item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-  color: #2f4f75;
-  font-size: 14px;
-}
-
-.item-total {
-  color: #1866bf;
-  font-weight: 700;
-}
-
-.count-control {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid #cfdcf0;
-  border-radius: 8px;
-  background: #fff;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.count-btn {
+.btn-delete {
+  background: transparent;
+  border: none;
+  color: #909399;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete:hover:not(:disabled) {
+  color: #f56c6c;
+  background-color: #fef0f0;
+}
+
+.btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.item-sku {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #909399;
+  background: #f4f4f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+/* 价格与数量控制器 */
+.item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 12px;
+}
+
+.price-symbol {
+  font-size: 14px;
+  margin-right: 2px;
+  color: #ff4d4f;
+}
+
+.price-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ff4d4f;
+}
+
+.quantity-controller {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.btn-qty {
   width: 28px;
   height: 28px;
+  background: #f5f7fa;
   border: none;
-  background: #f6f9ff;
-  color: #2b4b71;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.count-btn:disabled {
-  color: #9aa9bb;
-  background: #f0f4fa;
-  cursor: not-allowed;
-}
-
-.count-value {
-  min-width: 36px;
-  text-align: center;
-  font-weight: 700;
-  color: #234369;
-}
-
-.item-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.item-action-btn {
-  border: 1px solid #cddcf0;
-  border-radius: 10px;
-  background: #fff;
-  color: #28486f;
-  height: 34px;
-  min-width: 88px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.item-action-btn.danger {
-  border-color: #efc4c4;
-  color: #c84545;
-}
-
-.item-action-btn:disabled {
-  background: #eef3fa;
-  color: #8b9bb0;
-  border-color: #d9e3f1;
-  cursor: not-allowed;
-}
-
-.checkout-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
-  height: 72px;
-  background: rgba(255, 255, 255, 0.96);
-  border-top: 1px solid #dbe7f7;
-  box-shadow: 0 -8px 24px rgba(20, 44, 74, 0.08);
-  padding: 0 20px;
+  color: #606266;
   display: flex;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-qty:hover:not(:disabled) {
+  background: #e4e7ed;
+}
+
+.btn-qty:disabled {
+  color: #c0c4cc;
+  cursor: not-allowed;
+  background: #f5f7fa;
+}
+
+.qty-input {
+  width: 40px;
+  text-align: center;
+  font-size: 14px;
+  color: #303133;
+  font-weight: 500;
+}
+
+/* 底部结算栏 */
+.checkout-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(220, 223, 230, 0.5);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 0 5%;
+  z-index: 100;
 }
 
 .checkout-left {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.checkout-select-all {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  width: fit-content;
-  color: #2f4f75;
+  gap: 20px;
+}
+
+.select-all-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.select-all-text {
   font-size: 14px;
-  font-weight: 700;
+  color: #606266;
 }
 
-.checkout-select-all input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: #1f8bff;
+.summary-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.checkout-select-all input:disabled + span {
-  color: #9aa9bb;
-}
-
-.checkout-text {
-  margin: 0;
-  color: #2f4f75;
+.summary-text {
   font-size: 14px;
+  color: #606266;
 }
 
-.checkout-reduce {
-  margin: 0;
-  color: #d76060;
-  font-size: 13px;
+.highlight {
+  color: #ff4d4f;
+  font-weight: 600;
+  margin: 0 2px;
 }
 
-.checkout-sync {
-  margin: 0;
-  color: #6f87a4;
+.reduce-tag {
   font-size: 12px;
+  color: #ff4d4f;
+  background: #fff0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #ffccc7;
+}
+
+.sync-status {
+  font-size: 12px;
+  color: #909399;
 }
 
 .checkout-right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 20px;
 }
 
-.checkout-price {
-  color: #1d3b5f;
+.total-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.total-label {
   font-size: 14px;
+  color: #303133;
 }
 
-.checkout-label {
-  color: #6885a8;
-}
-
-.checkout-price strong {
-  color: #e45757;
+.total-price .price-value {
   font-size: 24px;
 }
 
-.checkout-btn {
-  height: 44px;
-  min-width: 120px;
-  border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ff7a00, #ff4d2e);
+.btn-checkout {
+  background: linear-gradient(135deg, #ff7a45, #ff4d4f);
   color: #fff;
-  font-size: 15px;
-  font-weight: 800;
+  border: none;
+  border-radius: 36px;
+  height: 44px;
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
 }
 
-.checkout-btn:disabled {
-  background: #ffbf8b;
+.btn-checkout:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 77, 79, 0.4);
+}
+
+.btn-checkout:disabled {
+  background: #ffccc7;
+  box-shadow: none;
   cursor: not-allowed;
+  transform: none;
 }
 
-@media (max-width: 720px) {
+/* 响应式调整 */
+@media (max-width: 768px) {
   .cart-page {
-    padding: 16px 16px 86px;
+    padding: 16px 12px;
   }
-
-  h1 {
-    font-size: 28px;
-  }
-
+  
   .cart-item {
-    grid-template-columns: 84px 1fr;
-    padding: 12px;
+    padding: 16px 12px;
   }
-
-  .item-image {
-    width: 84px;
-    height: 84px;
-  }
-
-  .checkout-bar {
+  
+  .item-image-wrapper {
+    width: 80px;
     height: 80px;
-    padding: 0 12px;
+  }
+  
+  .item-title {
+    font-size: 14px;
   }
 
-  .checkout-price strong {
-    font-size: 20px;
+  .item-sku {
+    font-size: 12px;
   }
-
-  .checkout-btn {
-    min-width: 98px;
+  
+  .checkout-bar {
+    padding: 0 16px;
+  }
+  
+  .summary-info {
+    display: none; /* 移动端空间有限，隐藏件数详情，全选旁边足够 */
+  }
+  
+  .btn-checkout {
+    padding: 0 20px;
     height: 40px;
+    font-size: 15px;
   }
 }
 
-@media (max-width: 520px) {
-  .cart-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
+@media (max-width: 480px) {
   .checkout-bar {
     flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
-    gap: 6px;
-    height: 106px;
-    padding: 8px 12px;
+    height: auto;
+    padding: 12px 16px;
+    gap: 12px;
   }
-
-  .checkout-right {
+  
+  .checkout-left, .checkout-right {
+    width: 100%;
     justify-content: space-between;
+  }
+  
+  .cart-list.has-bottom-bar {
+    padding-bottom: 120px;
   }
 }
 </style>

@@ -1,0 +1,428 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "OpenAPI definition",
+        "version": "v0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:9100",
+            "description": "Generated server url"
+        }
+    ],
+    "paths": {
+        "/{skuId}/uncheck": {
+            "put": {
+                "tags": [
+                    "购物车服务"
+                ],
+                "description": "取消选中购物车项",
+                "operationId": "uncheckCartItem",
+                "parameters": [
+                    {
+                        "name": "X-User-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "skuId",
+                        "in": "path",
+                        "description": "商品skuId",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "用户Id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/{skuId}/count": {
+            "put": {
+                "tags": [
+                    "购物车服务"
+                ],
+                "description": "修改购物车项数量",
+                "operationId": "updateCartItemCount",
+                "parameters": [
+                    {
+                        "name": "X-User-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "skuId",
+                        "in": "path",
+                        "description": "商品skuId",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "description": "商品数量，必须大于0",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "用户Id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/{skuId}/check": {
+            "put": {
+                "tags": [
+                    "购物车服务"
+                ],
+                "description": "选中购物车项",
+                "operationId": "checkCartItem",
+                "parameters": [
+                    {
+                        "name": "X-User-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "skuId",
+                        "in": "path",
+                        "description": "商品skuId",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "用户Id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "tags": [
+                    "购物车服务"
+                ],
+                "description": "获取购物车",
+                "operationId": "getCart_1",
+                "parameters": [
+                    {
+                        "name": "X-User-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "用户Id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Cart"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "购物车服务"
+                ],
+                "description": "添加购物车项",
+                "operationId": "addCartItem_1",
+                "parameters": [
+                    {
+                        "name": "X-User-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "用户Id"
+                    },
+                    {
+                        "name": "dto",
+                        "in": "query",
+                        "description": "购物车项"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CartItemDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/{skuId}": {
+            "delete": {
+                "tags": [
+                    "购物车服务"
+                ],
+                "description": "删除购物车项",
+                "operationId": "deleteCartItem",
+                "parameters": [
+                    {
+                        "name": "X-User-Id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "skuId",
+                        "in": "path",
+                        "description": "商品skuId",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "用户Id"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "RObject": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "数据"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
+            "CartItemDTO": {
+                "required": [
+                    "skuId"
+                ],
+                "type": "object",
+                "properties": {
+                    "skuId": {
+                        "type": "integer",
+                        "description": "skuId",
+                        "format": "int64"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "数量",
+                        "format": "int32"
+                    }
+                },
+                "description": "购物车项"
+            },
+            "Cart": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "description": "购物项",
+                        "items": {
+                            "$ref": "#/components/schemas/CartItemVO"
+                        }
+                    },
+                    "countNumber": {
+                        "type": "integer",
+                        "description": "商品总数",
+                        "format": "int32"
+                    },
+                    "countType": {
+                        "type": "integer",
+                        "description": "商品类型总数",
+                        "format": "int32"
+                    },
+                    "totalAmount": {
+                        "type": "number",
+                        "description": "总价"
+                    },
+                    "reduce": {
+                        "type": "number",
+                        "description": "优惠"
+                    }
+                },
+                "description": "购物车"
+            },
+            "CartItemVO": {
+                "type": "object",
+                "properties": {
+                    "skuId": {
+                        "type": "integer",
+                        "description": "skuId",
+                        "format": "int64"
+                    },
+                    "spuId": {
+                        "type": "integer",
+                        "description": "spuId",
+                        "format": "int64"
+                    },
+                    "selected": {
+                        "type": "boolean",
+                        "description": "是否选中"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "标题"
+                    },
+                    "image": {
+                        "type": "string",
+                        "description": "图片"
+                    },
+                    "skuAttr": {
+                        "type": "array",
+                        "description": "属性",
+                        "items": {
+                            "type": "string",
+                            "description": "属性"
+                        }
+                    },
+                    "price": {
+                        "type": "number",
+                        "description": "价格"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "数量",
+                        "format": "int32"
+                    },
+                    "totalPrice": {
+                        "type": "number",
+                        "description": "总价"
+                    }
+                },
+                "description": "购物项视图"
+            }
+        }
+    }
+}

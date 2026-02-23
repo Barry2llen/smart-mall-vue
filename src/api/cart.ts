@@ -25,19 +25,19 @@ export function getCart() {
 }
 
 export function checkCartItem(skuId: number) {
-  return request.put(`/cart/${skuId}/check`)
+  return request.put(`/cart/public/${skuId}/check`)
 }
 
 export function uncheckCartItem(skuId: number) {
-  return request.put(`/cart/${skuId}/uncheck`)
+  return request.put(`/cart/public/${skuId}/uncheck`)
 }
 
 export function deleteCartItem(skuId: number) {
-  return request.delete(`/cart/${skuId}`)
+  return request.delete(`/cart/public/${skuId}`)
 }
 
 export function updateCartItemCount(skuId: number, count: number) {
-  return request.put(`/cart/${skuId}/count`, null, {
+  return request.put(`/cart/public/${skuId}/count`, null, {
     params: { count },
   })
 }

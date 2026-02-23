@@ -22,7 +22,7 @@ export interface RObject<T = unknown> {
 const AUTH_API = '/auth'
 
 export function sendCode(email: string) {
-  return request.post<any, RObject>(`${AUTH_API}/sendCode`, email, {
+  return request.post<any, RObject>(`${AUTH_API}/public/sendCode`, email, {
     params: { email }, // swagger says 'in: query'
   })
 }
@@ -34,17 +34,17 @@ export function sendCode(email: string) {
 // I'll stick to what usually works: query params for 'in: query'.
 
 export function sendCodeWithBody(email: string) {
-    return request.post<any, RObject>(`${AUTH_API}/sendCode`, email, {
+    return request.post<any, RObject>(`${AUTH_API}/public/sendCode`, email, {
         params: { email }
     })
 }
 
 export function authLogin(data: UserLogin) {
-  return request.post<any, RObject>(`${AUTH_API}/login`, data)
+  return request.post<any, RObject>(`${AUTH_API}/public/login`, data)
 }
 
 export function authRegister(data: UserRegister) {
-  return request.post<any, RObject>(`${AUTH_API}/register`, data)
+  return request.post<any, RObject>(`${AUTH_API}/public/register`, data)
 }
 
 export function authLoginByGithubCode(code: string, state: string) {
@@ -54,9 +54,9 @@ export function authLoginByGithubCode(code: string, state: string) {
 }
 
 export function getCurrentUserId() {
-  return request.get<string, string>(`${AUTH_API}/test`)
+  return request.get<string, string>(`${AUTH_API}/public/test`)
 }
 
 export function logout() {
-  return request.post(`${AUTH_API}/logout`)
+  return request.post(`${AUTH_API}/public/logout`)
 }

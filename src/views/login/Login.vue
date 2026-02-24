@@ -70,6 +70,9 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { authLogin, type UserLogin } from '@/api/auth'
 
+defineOptions({ name: 'LoginPage' })
+
+
 const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
@@ -89,8 +92,8 @@ const handleLogin = async () => {
     } else {
       errorMessage.value = res.msg || '登录失败'
     }
-  } catch (error: any) {
-    errorMessage.value = error.message || '登录时发生错误'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : '登录时发生错误'
   } finally {
     loading.value = false
   }

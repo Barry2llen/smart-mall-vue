@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   checkCartItem,
   deleteCartItem,
@@ -44,6 +45,10 @@ const getDisplayedSelected = (item: CartItemVO) => {
 
 const cartItems = computed(() => cart.value?.items || [])
 
+const isOutOfStock = (item: CartItemVO) => {
+  return item.stock != null && item.stock <= getDisplayedCount(item)
+}
+
 const selectedTypeCount = computed(() => {
   return cartItems.value.filter((item) => getDisplayedSelected(item)).length
 })
@@ -61,11 +66,6 @@ const allSelected = computed(() => {
   return cartItems.value.length > 0 && selectedTypeCount.value === cartItems.value.length
 })
 
-const displayCountType = computed(() => cartItems.value.length)
-
-const displayCountNumber = computed(() => {
-  return cartItems.value.reduce((sum, item) => sum + Number(getDisplayedCount(item) || 0), 0)
-})
 
 const displayTotalAmount = computed(() => {
   return cartItems.value.reduce((sum, item) => {
@@ -338,6 +338,12 @@ const handleChangeCount = (item: CartItemVO, nextCount: number) => {
   })
 }
 
+const router = useRouter()
+
+const handleCheckout = () => {
+  void router.push({ name: 'orderConfirm' })
+}
+
 onMounted(() => {
   loadCart()
 })
@@ -394,7 +400,7 @@ onBeforeUnmount(() => {
 
       <template v-else>
         <div class="cart-list has-bottom-bar">
-          <article v-for="item in cart.items" :key="item.skuId" class="cart-item">
+          <article v-for="item in cart.items" :key="item.skuId" class="cart-item" :class="{ 'out-of-stock': isOutOfStock(item) }">
             <label class="item-checkbox">
               <input
                 type="checkbox"
@@ -427,6 +433,16 @@ onBeforeUnmount(() => {
               </div>
               
               <p class="item-sku">{{ item.skuAttr?.join(' / ') || '默认规格' }}</p>
+
+              <div v-if="isOutOfStock(item)" class="stock-warning" :class="{ 'stock-critical': item.stock! < getDisplayedCount(item) }">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span v-if="item.stock! < getDisplayedCount(item)">库存不足（仅剩 {{ item.stock }} 件）</span>
+                <span v-else>库存紧张（仅剩 {{ item.stock }} 件）</span>
+              </div>
               
               <div class="item-footer">
                 <div class="item-price-wrap">
@@ -447,7 +463,7 @@ onBeforeUnmount(() => {
                   <button
                     class="btn-qty"
                     type="button"
-                    :disabled="isPending(item.skuId)"
+                    :disabled="isPending(item.skuId) || (item.stock != null && getDisplayedCount(item) >= item.stock)"
                     @click="handleChangeCount(item, getDisplayedCount(item) + 1)"
                   >
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -489,7 +505,7 @@ onBeforeUnmount(() => {
                 <span class="price-value">{{ Number(displayPayableAmount).toFixed(2) }}</span>
               </div>
             </div>
-            <button class="btn-checkout" type="button" :disabled="checkoutDisabled">
+            <button class="btn-checkout" type="button" :disabled="checkoutDisabled" @click="handleCheckout">
               去结算
             </button>
           </div>
@@ -621,6 +637,72 @@ onBeforeUnmount(() => {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
+/* 库存不足样式 */
+.cart-item.out-of-stock {
+  border: 1.5px solid #ff7875;
+  background: linear-gradient(135deg, #fff2f0 0%, #fff7f5 100%);
+  box-shadow: 0 2px 12px rgba(255, 77, 79, 0.08);
+  position: relative;
+}
+
+.cart-item.out-of-stock::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 36px 36px 0;
+  border-color: transparent #ff4d4f transparent transparent;
+  border-radius: 0 12px 0 0;
+}
+
+.cart-item.out-of-stock::after {
+  content: '!';
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cart-item.out-of-stock .item-image-wrapper {
+  opacity: 0.65;
+}
+
+.cart-item.out-of-stock:hover {
+  box-shadow: 0 6px 16px rgba(255, 77, 79, 0.12);
+}
+
+.stock-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #d46b08;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  animation: stock-pulse 2s ease-in-out infinite;
+}
+
+.stock-warning.stock-critical {
+  color: #cf1322;
+  background: #fff1f0;
+  border-color: #ffa39e;
+}
+
+@keyframes stock-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 /* 复选框通用样式 */
 .custom-checkbox {
   appearance: none;
@@ -706,6 +788,7 @@ onBeforeUnmount(() => {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

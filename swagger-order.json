@@ -1,0 +1,206 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "OpenAPI definition",
+        "version": "v0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8100",
+            "description": "Generated server url"
+        }
+    ],
+    "paths": {
+        "/public/confirm": {
+            "get": {
+                "tags": [
+                    "订单操作"
+                ],
+                "description": "确认订单信息（购物车结算）",
+                "operationId": "confirmOrder",
+                "parameters": [
+                    {
+                        "name": "memberId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ROrderConfirm"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "MemberReceiveAddress": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "id",
+                        "format": "int64"
+                    },
+                    "memberId": {
+                        "type": "integer",
+                        "description": "member_id",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "收货人姓名"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "电话"
+                    },
+                    "postCode": {
+                        "type": "string",
+                        "description": "邮政编码"
+                    },
+                    "province": {
+                        "type": "string",
+                        "description": "省份/直辖市"
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "城市"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "区"
+                    },
+                    "detailAddress": {
+                        "type": "string",
+                        "description": "详细地址(街道)"
+                    },
+                    "areacode": {
+                        "type": "string",
+                        "description": "省市区代码"
+                    },
+                    "defaultStatus": {
+                        "type": "integer",
+                        "description": "是否默认",
+                        "format": "int32"
+                    }
+                },
+                "description": "会员收货地址"
+            },
+            "OrderConfirm": {
+                "type": "object",
+                "properties": {
+                    "addresses": {
+                        "type": "array",
+                        "description": "收货地址列表",
+                        "items": {
+                            "$ref": "#/components/schemas/MemberReceiveAddress"
+                        }
+                    },
+                    "items": {
+                        "type": "array",
+                        "description": "订单项列表",
+                        "items": {
+                            "$ref": "#/components/schemas/OrderItemVO"
+                        }
+                    },
+                    "points": {
+                        "type": "integer",
+                        "description": "获得积分",
+                        "format": "int32"
+                    },
+                    "total": {
+                        "type": "number",
+                        "description": "订单总金额"
+                    },
+                    "payTotal": {
+                        "type": "number",
+                        "description": "应付总金额"
+                    }
+                },
+                "description": "确认订单信息"
+            },
+            "OrderItemVO": {
+                "type": "object",
+                "properties": {
+                    "skuId": {
+                        "type": "integer",
+                        "description": "skuId",
+                        "format": "int64"
+                    },
+                    "spuId": {
+                        "type": "integer",
+                        "description": "spuId",
+                        "format": "int64"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "标题"
+                    },
+                    "image": {
+                        "type": "string",
+                        "description": "图片"
+                    },
+                    "skuAttr": {
+                        "type": "array",
+                        "description": "属性",
+                        "items": {
+                            "type": "string",
+                            "description": "属性"
+                        }
+                    },
+                    "price": {
+                        "type": "number",
+                        "description": "价格"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "数量",
+                        "format": "int32"
+                    },
+                    "totalPrice": {
+                        "type": "number",
+                        "description": "总价"
+                    }
+                },
+                "description": "订单项视图"
+            },
+            "ROrderConfirm": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/OrderConfirm"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            }
+        }
+    }
+}

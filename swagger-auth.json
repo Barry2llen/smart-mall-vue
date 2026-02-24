@@ -11,7 +11,7 @@
         }
     ],
     "paths": {
-        "/sendCode": {
+        "/public/sendCode": {
             "post": {
                 "tags": [
                     "登录注册"
@@ -50,7 +50,7 @@
                 }
             }
         },
-        "/register": {
+        "/public/register": {
             "post": {
                 "tags": [
                     "登录注册"
@@ -88,7 +88,7 @@
                 }
             }
         },
-        "/login": {
+        "/public/login": {
             "post": {
                 "tags": [
                     "登录注册"
@@ -126,7 +126,7 @@
                 }
             }
         },
-        "/test": {
+        "/public/test": {
             "get": {
                 "tags": [
                     "登录注册"
@@ -134,8 +134,8 @@
                 "operationId": "test",
                 "parameters": [
                     {
-                        "name": "X-User-Id",
-                        "in": "header",
+                        "name": "userId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -156,7 +156,7 @@
                 }
             }
         },
-        "/refresh": {
+        "/public/refresh": {
             "get": {
                 "tags": [
                     "token管理"
@@ -177,6 +177,38 @@
                             "*/*": {
                                 "schema": {
                                     "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/public/logout": {
+            "get": {
+                "tags": [
+                    "登录注册"
+                ],
+                "description": "用户登出",
+                "operationId": "logout",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
                                 }
                             }
                         }

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+
+defineOptions({ name: 'HomePage' })
+
 import { useRoute, useRouter } from 'vue-router'
 import { authLoginByGithubCode, getCurrentUserId, logout } from '@/api/auth'
 
@@ -37,8 +40,8 @@ const handleGithubCallback = async () => {
     await router.replace({ path: '/' })
     message.value = 'GitHub 登录成功'
     await loadCurrentUser()
-  } catch (error: any) {
-    message.value = error?.message || 'GitHub 登录失败'
+  } catch (error: unknown) {
+    message.value = error instanceof Error ? error.message : 'GitHub 登录失败'
   } finally {
     loading.value = false
   }

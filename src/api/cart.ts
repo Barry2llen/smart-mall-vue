@@ -9,6 +9,7 @@ export interface CartItemVO {
   skuAttr: string[]
   price: number
   count: number
+  stock?: number
   totalPrice: number
 }
 
@@ -20,8 +21,14 @@ export interface Cart {
   reduce: number
 }
 
+export interface RCart {
+  code: string
+  msg: string
+  data: Cart
+}
+
 export function getCart() {
-  return request.get<Cart, Cart>('/cart')
+  return request.get<RCart, RCart>('/cart/public').then((res) => res.data)
 }
 
 export function checkCartItem(skuId: number) {

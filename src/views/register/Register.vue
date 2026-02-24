@@ -98,6 +98,9 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { authRegister, sendCode, type UserRegister } from '@/api/auth'
 
+defineOptions({ name: 'RegisterPage' })
+
+
 const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
@@ -125,8 +128,8 @@ const handleSendCode = async () => {
     await sendCode(registerForm.email)
     successMessage.value = '验证码已发送！'
     startCooldown()
-  } catch (error: any) {
-    errorMessage.value = error.message || '发送验证码失败'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : '发送验证码失败'
   }
 }
 
@@ -166,8 +169,8 @@ const handleRegister = async () => {
       errorMessage.value = res.msg || '注册失败'
       resetCooldown()
     }
-  } catch (error: any) {
-    errorMessage.value = error.message || '注册时发生错误'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : '注册时发生错误'
     resetCooldown()
   } finally {
     loading.value = false

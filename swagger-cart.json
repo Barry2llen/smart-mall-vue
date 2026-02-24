@@ -6,12 +6,12 @@
     },
     "servers": [
         {
-            "url": "http://localhost:9100",
+            "url": "http://localhost:9200",
             "description": "Generated server url"
         }
     ],
     "paths": {
-        "/{skuId}/uncheck": {
+        "/public/{skuId}/uncheck": {
             "put": {
                 "tags": [
                     "购物车服务"
@@ -20,8 +20,8 @@
                 "operationId": "uncheckCartItem",
                 "parameters": [
                     {
-                        "name": "X-User-Id",
-                        "in": "header",
+                        "name": "userId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -37,11 +37,6 @@
                             "type": "integer",
                             "format": "int64"
                         }
-                    },
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "description": "用户Id"
                     }
                 ],
                 "responses": {
@@ -58,7 +53,7 @@
                 }
             }
         },
-        "/{skuId}/count": {
+        "/public/{skuId}/count": {
             "put": {
                 "tags": [
                     "购物车服务"
@@ -67,8 +62,8 @@
                 "operationId": "updateCartItemCount",
                 "parameters": [
                     {
-                        "name": "X-User-Id",
-                        "in": "header",
+                        "name": "userId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -94,11 +89,6 @@
                             "type": "integer",
                             "format": "int32"
                         }
-                    },
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "description": "用户Id"
                     }
                 ],
                 "responses": {
@@ -115,7 +105,7 @@
                 }
             }
         },
-        "/{skuId}/check": {
+        "/public/{skuId}/check": {
             "put": {
                 "tags": [
                     "购物车服务"
@@ -124,8 +114,8 @@
                 "operationId": "checkCartItem",
                 "parameters": [
                     {
-                        "name": "X-User-Id",
-                        "in": "header",
+                        "name": "userId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -141,11 +131,6 @@
                             "type": "integer",
                             "format": "int64"
                         }
-                    },
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "description": "用户Id"
                     }
                 ],
                 "responses": {
@@ -162,27 +147,22 @@
                 }
             }
         },
-        "/": {
+        "/public": {
             "get": {
                 "tags": [
                     "购物车服务"
                 ],
                 "description": "获取购物车",
-                "operationId": "getCart_1",
+                "operationId": "getCart",
                 "parameters": [
                     {
-                        "name": "X-User-Id",
-                        "in": "header",
+                        "name": "userId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "integer",
                             "format": "int64"
                         }
-                    },
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "description": "用户Id"
                     }
                 ],
                 "responses": {
@@ -191,7 +171,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Cart"
+                                    "$ref": "#/components/schemas/RCart"
                                 }
                             }
                         }
@@ -203,21 +183,16 @@
                     "购物车服务"
                 ],
                 "description": "添加购物车项",
-                "operationId": "addCartItem_1",
+                "operationId": "addCartItem",
                 "parameters": [
                     {
-                        "name": "X-User-Id",
-                        "in": "header",
+                        "name": "userId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "integer",
                             "format": "int64"
                         }
-                    },
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "description": "用户Id"
                     },
                     {
                         "name": "dto",
@@ -249,7 +224,7 @@
                 }
             }
         },
-        "/{skuId}": {
+        "/public/{skuId}": {
             "delete": {
                 "tags": [
                     "购物车服务"
@@ -258,8 +233,8 @@
                 "operationId": "deleteCartItem",
                 "parameters": [
                     {
-                        "name": "X-User-Id",
-                        "in": "header",
+                        "name": "userId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -275,11 +250,6 @@
                             "type": "integer",
                             "format": "int64"
                         }
-                    },
-                    {
-                        "name": "userId",
-                        "in": "query",
-                        "description": "用户Id"
                     }
                 ],
                 "responses": {
@@ -416,12 +386,41 @@
                         "description": "数量",
                         "format": "int32"
                     },
+                    "stock": {
+                        "type": "integer",
+                        "description": "可用库存",
+                        "format": "int32"
+                    },
                     "totalPrice": {
                         "type": "number",
                         "description": "总价"
                     }
                 },
                 "description": "购物项视图"
+            },
+            "RCart": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Cart"
+                    }
+                },
+                "description": "统一http请求返回格式"
             }
         }
     }

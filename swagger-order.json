@@ -11,6 +11,94 @@
         }
     ],
     "paths": {
+        "/public/submit": {
+            "post": {
+                "tags": [
+                    "订单操作"
+                ],
+                "description": "提交订单",
+                "operationId": "submitOrder",
+                "parameters": [
+                    {
+                        "name": "memberId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "orderSubmit",
+                        "in": "query",
+                        "description": "订单提交信息"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderSubmit"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/public/pay/{orderSn}": {
+            "get": {
+                "tags": [
+                    "支付"
+                ],
+                "summary": "支付订单",
+                "operationId": "pay",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "orderSn",
+                        "in": "path",
+                        "description": "订单编号",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/public/confirm": {
             "get": {
                 "tags": [
@@ -46,6 +134,68 @@
     },
     "components": {
         "schemas": {
+            "OrderSubmit": {
+                "required": [
+                    "addrId",
+                    "payment",
+                    "price",
+                    "token"
+                ],
+                "type": "object",
+                "properties": {
+                    "addrId": {
+                        "type": "integer",
+                        "description": "收货地址id",
+                        "format": "int64"
+                    },
+                    "payment": {
+                        "type": "string",
+                        "description": "支付方式",
+                        "enum": [
+                            "0",
+                            "1"
+                        ]
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "防重令牌"
+                    },
+                    "price": {
+                        "type": "number",
+                        "description": "订单确认页的总价（用于验价）"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "备注"
+                    }
+                },
+                "description": "订单提交信息"
+            },
+            "RObject": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "数据"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
             "MemberReceiveAddress": {
                 "type": "object",
                 "properties": {
@@ -128,6 +278,10 @@
                     "payTotal": {
                         "type": "number",
                         "description": "应付总金额"
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "防重令牌"
                     }
                 },
                 "description": "确认订单信息"

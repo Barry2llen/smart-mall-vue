@@ -31,6 +31,15 @@ export interface OrderConfirm {
   points: number
   total: number
   payTotal: number
+  token?: string
+}
+
+export interface OrderSubmit {
+  addrId: number
+  payment: string
+  token: string
+  price: number
+  notes?: string
 }
 
 export interface ROrderConfirm {
@@ -43,4 +52,14 @@ export function getOrderConfirm() {
   return request
     .get<ROrderConfirm, ROrderConfirm>('/order/public/confirm')
     .then((res) => res.data)
+}
+
+export interface RObject {
+  code: string
+  msg: string
+  data?: unknown
+}
+
+export function submitOrder(data: OrderSubmit) {
+  return request.post<RObject, RObject>('/order/public/submit', data)
 }

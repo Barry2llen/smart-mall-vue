@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { getOrderConfirm, type MemberReceiveAddress, type OrderConfirm } from '@/api/order'
+import {
+  getOrderConfirm,
+  submitOrder,
+  type MemberReceiveAddress,
+  type OrderConfirm,
+} from '@/api/order'
 
 defineOptions({ name: 'ConfirmOrderPage' })
 
@@ -8,6 +13,10 @@ const loading = ref(false)
 const errorMessage = ref('')
 const confirmData = ref<OrderConfirm | null>(null)
 const selectedAddressId = ref<number | null>(null)
+const notes = ref('')
+const payment = ref('0')
+const submitting = ref(false)
+const submitError = ref('')
 
 const formatPrice = (value?: number) => `¥${Number(value || 0).toFixed(2)}`
 
@@ -31,6 +40,43 @@ const loadConfirm = async () => {
     errorMessage.value = e instanceof Error ? e.message : '加载订单信息失败'
   } finally {
     loading.value = false
+  }
+}
+
+const handleSubmit = async () => {
+  if (!selectedAddressId.value || !confirmData.value) return
+  const token = confirmData.value.token
+  if (!token) {
+    submitError.value = '订单令牌缺失，请刷新重试'
+    return
+  }
+  submitting.value = true
+  submitError.value = ''
+  try {
+    const res = await submitOrder({
+      addrId: selectedAddressId.value,
+      payment: payment.value,
+      token,
+      price: confirmData.value.payTotal ?? 0,
+      notes: notes.value || undefined,
+    })
+    // 响应拦截器在 code 非 0 时已 reject，走到这里说明提交成功
+    const orderSn = res.data as string
+    if (orderSn) {
+      // window.location.href 不携带 Authorization header，
+      // 在跳转前将 token 写入 cookie，供后端从 cookie 读取认证信息
+      const accessToken = localStorage.getItem('access_token')
+      if (accessToken) {
+        document.cookie = `access_token=${encodeURIComponent(accessToken)}; path=/`
+      }
+      window.location.href = `/api/order/public/pay/${orderSn}`
+    } else {
+      submitError.value = '提交成功但未获取到订单号'
+    }
+  } catch (e: unknown) {
+    submitError.value = e instanceof Error ? e.message : '提交订单失败'
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -136,6 +182,53 @@ onMounted(loadConfirm)
           </div>
         </section>
 
+        <!-- 支付方式 -->
+        <section class="section-card">
+          <div class="section-header">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            <h2 class="section-title">支付方式</h2>
+          </div>
+          <div class="payment-options">
+            <label
+              class="payment-option"
+              :class="{ active: payment === '0' }"
+            >
+              <input type="radio" v-model="payment" value="0" name="payment" />
+              <span class="payment-radio"><span class="payment-dot"></span></span>
+              <span class="payment-label">在线支付</span>
+            </label>
+            <label
+              class="payment-option"
+              :class="{ active: payment === '1' }"
+            >
+              <input type="radio" v-model="payment" value="1" name="payment" />
+              <span class="payment-radio"><span class="payment-dot"></span></span>
+              <span class="payment-label">货到付款</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- 订单备注 -->
+        <section class="section-card">
+          <div class="section-header">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <h2 class="section-title">订单备注</h2>
+          </div>
+          <textarea
+            v-model="notes"
+            class="notes-input"
+            placeholder="选填，可以告诉卖家您的特殊需求"
+            maxlength="200"
+            rows="3"
+          ></textarea>
+        </section>
+
         <!-- 金额汇总区 -->
         <section class="section-card summary-card">
           <div class="section-header">
@@ -187,13 +280,18 @@ onMounted(loadConfirm)
             <button
               class="btn-submit"
               type="button"
-              :disabled="!selectedAddressId"
+              :disabled="!selectedAddressId || submitting"
+              @click="handleSubmit"
             >
-              提交订单
+              {{ submitting ? '提交中...' : '提交订单' }}
             </button>
           </div>
         </footer>
 
+        <!-- 提交错误提示 -->
+        <div v-if="submitError" class="submit-error">
+          {{ submitError }}
+        </div>
       </template>
     </div>
   </main>
@@ -679,5 +777,105 @@ onMounted(loadConfirm)
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+}
+
+/* 支付方式 */
+.payment-options {
+  display: flex;
+  gap: 16px;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 2px solid #ebeef5;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.payment-option:hover {
+  border-color: #ffa0a2;
+  background-color: #fff9f9;
+}
+
+.payment-option.active {
+  border-color: #ff4d4f;
+  background-color: #fff5f5;
+}
+
+.payment-option input[type="radio"] {
+  display: none;
+}
+
+.payment-radio {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #dcdfe6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.payment-option.active .payment-radio {
+  border-color: #ff4d4f;
+}
+
+.payment-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.2s;
+}
+
+.payment-option.active .payment-dot {
+  background: #ff4d4f;
+}
+
+.payment-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #303133;
+}
+
+/* 备注 */
+.notes-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #303133;
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.notes-input:focus {
+  border-color: #ff4d4f;
+}
+
+.notes-input::placeholder {
+  color: #c0c4cc;
+}
+
+/* 提交错误 */
+.submit-error {
+  text-align: center;
+  color: #f56c6c;
+  font-size: 14px;
+  padding: 8px 16px;
+  background: #fef0f0;
+  border-radius: 8px;
 }
 </style>

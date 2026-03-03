@@ -66,7 +66,6 @@ const allSelected = computed(() => {
   return cartItems.value.length > 0 && selectedTypeCount.value === cartItems.value.length
 })
 
-
 const displayTotalAmount = computed(() => {
   return cartItems.value.reduce((sum, item) => {
     if (!getDisplayedSelected(item)) {
@@ -84,9 +83,7 @@ const displayPayableAmount = computed(() => {
 
 const checkoutDisabled = computed(() => {
   return (
-    cartItems.value.length === 0 ||
-    selectedTypeCount.value === 0 ||
-    displayPayableAmount.value <= 0
+    cartItems.value.length === 0 || selectedTypeCount.value === 0 || displayPayableAmount.value <= 0
   )
 })
 
@@ -364,7 +361,16 @@ onBeforeUnmount(() => {
       <header class="cart-header">
         <h1 class="page-title">购物车</h1>
         <button class="btn-refresh" type="button" @click="handleRefresh" :disabled="loading">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            stroke="currentColor"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
@@ -379,9 +385,18 @@ onBeforeUnmount(() => {
         <div class="spinner"></div>
         <p>正在加载购物车...</p>
       </div>
-      
+
       <div v-else-if="errorMessage" class="empty-state error">
-        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="48"
+          height="48"
+          stroke="currentColor"
+          stroke-width="1.5"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -390,7 +405,16 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-else-if="!cart || !cart.items || cart.items.length === 0" class="empty-state">
-        <svg viewBox="0 0 24 24" width="64" height="64" stroke="#dcdfe6" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="64"
+          height="64"
+          stroke="#dcdfe6"
+          stroke-width="1"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="9" cy="21" r="1"></circle>
           <circle cx="20" cy="21" r="1"></circle>
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -400,7 +424,12 @@ onBeforeUnmount(() => {
 
       <template v-else>
         <div class="cart-list has-bottom-bar">
-          <article v-for="item in cart.items" :key="item.skuId" class="cart-item" :class="{ 'out-of-stock': isOutOfStock(item) }">
+          <article
+            v-for="item in cart.items"
+            :key="item.skuId"
+            class="cart-item"
+            :class="{ 'out-of-stock': isOutOfStock(item) }"
+          >
             <label class="item-checkbox">
               <input
                 type="checkbox"
@@ -410,7 +439,7 @@ onBeforeUnmount(() => {
                 @change="handleToggleSelected(item)"
               />
             </label>
-            
+
             <div class="item-image-wrapper">
               <img class="item-image" :src="item.image" :alt="item.title" />
             </div>
@@ -425,31 +454,59 @@ onBeforeUnmount(() => {
                   :disabled="isPending(item.skuId)"
                   @click="handleDelete(item)"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
                   </svg>
                 </button>
               </div>
-              
+
               <p class="item-sku">{{ item.skuAttr?.join(' / ') || '默认规格' }}</p>
 
-              <div v-if="isOutOfStock(item)" class="stock-warning" :class="{ 'stock-critical': item.stock! < getDisplayedCount(item) }">
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <div
+                v-if="isOutOfStock(item)"
+                class="stock-warning"
+                :class="{ 'stock-critical': item.stock! < getDisplayedCount(item) }"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                  ></path>
                   <line x1="12" y1="9" x2="12" y2="13"></line>
                   <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
-                <span v-if="item.stock! < getDisplayedCount(item)">库存不足（仅剩 {{ item.stock }} 件）</span>
+                <span v-if="item.stock! < getDisplayedCount(item)"
+                  >库存不足（仅剩 {{ item.stock }} 件）</span
+                >
                 <span v-else>库存紧张（仅剩 {{ item.stock }} 件）</span>
               </div>
-              
+
               <div class="item-footer">
                 <div class="item-price-wrap">
                   <span class="price-symbol">¥</span>
                   <span class="price-value">{{ Number(item.price || 0).toFixed(2) }}</span>
                 </div>
-                
+
                 <div class="quantity-controller">
                   <button
                     class="btn-qty"
@@ -457,16 +514,38 @@ onBeforeUnmount(() => {
                     :disabled="isPending(item.skuId) || getDisplayedCount(item) <= 1"
                     @click="handleChangeCount(item, getDisplayedCount(item) - 1)"
                   >
-                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      fill="none"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                   </button>
                   <span class="qty-input">{{ getDisplayedCount(item) }}</span>
                   <button
                     class="btn-qty"
                     type="button"
-                    :disabled="isPending(item.skuId) || (item.stock != null && getDisplayedCount(item) >= item.stock)"
+                    :disabled="
+                      isPending(item.skuId) ||
+                      (item.stock != null && getDisplayedCount(item) >= item.stock)
+                    "
                     @click="handleChangeCount(item, getDisplayedCount(item) + 1)"
                   >
-                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      fill="none"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -505,7 +584,12 @@ onBeforeUnmount(() => {
                 <span class="price-value">{{ Number(displayPayableAmount).toFixed(2) }}</span>
               </div>
             </div>
-            <button class="btn-checkout" type="button" :disabled="checkoutDisabled" @click="handleCheckout">
+            <button
+              class="btn-checkout"
+              type="button"
+              :disabled="checkoutDisabled"
+              @click="handleCheckout"
+            >
               去结算
             </button>
           </div>
@@ -521,7 +605,8 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   background-color: #f5f7fa;
   padding: 24px 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #333;
 }
 
@@ -557,7 +642,7 @@ onBeforeUnmount(() => {
   color: #606266;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .btn-refresh:hover:not(:disabled) {
@@ -609,7 +694,14 @@ onBeforeUnmount(() => {
   margin-bottom: 16px;
 }
 
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
 /* 商品列表 */
 .cart-list {
@@ -699,8 +791,13 @@ onBeforeUnmount(() => {
 }
 
 @keyframes stock-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* 复选框通用样式 */
@@ -1008,16 +1105,16 @@ onBeforeUnmount(() => {
   .cart-page {
     padding: 16px 12px;
   }
-  
+
   .cart-item {
     padding: 16px 12px;
   }
-  
+
   .item-image-wrapper {
     width: 80px;
     height: 80px;
   }
-  
+
   .item-title {
     font-size: 14px;
   }
@@ -1025,15 +1122,15 @@ onBeforeUnmount(() => {
   .item-sku {
     font-size: 12px;
   }
-  
+
   .checkout-bar {
     padding: 0 16px;
   }
-  
+
   .summary-info {
     display: none; /* 移动端空间有限，隐藏件数详情，全选旁边足够 */
   }
-  
+
   .btn-checkout {
     padding: 0 20px;
     height: 40px;
@@ -1048,12 +1145,13 @@ onBeforeUnmount(() => {
     padding: 12px 16px;
     gap: 12px;
   }
-  
-  .checkout-left, .checkout-right {
+
+  .checkout-left,
+  .checkout-right {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .cart-list.has-bottom-bar {
     padding-bottom: 120px;
   }

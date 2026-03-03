@@ -82,8 +82,8 @@ service.interceptors.response.use(
     // Based on swagger RObject, we might want to check res.code
     if (res.code && res.code !== '0' && res.code !== 0) {
       // Handle business error
-       console.error('API Error:', res.msg)
-       return Promise.reject(new Error(res.msg || 'Error'))
+      console.error('API Error:', res.msg)
+      return Promise.reject(new Error(res.msg || 'Error'))
     }
     return res
   },
@@ -117,9 +117,7 @@ service.interceptors.response.use(
     }
 
     const backendMsg =
-      error?.response?.data?.msg ||
-      error?.response?.data?.message ||
-      error?.response?.data?.error
+      error?.response?.data?.msg || error?.response?.data?.message || error?.response?.data?.error
     const statusText = error?.response?.statusText
     const finalMsg =
       backendMsg ||

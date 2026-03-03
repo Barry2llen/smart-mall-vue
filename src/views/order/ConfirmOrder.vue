@@ -23,8 +23,8 @@ const formatPrice = (value?: number) => `¥${Number(value || 0).toFixed(2)}`
 const fullAddress = (addr: MemberReceiveAddress) =>
   `${addr.province ?? ''}${addr.city ?? ''}${addr.region ?? ''}${addr.detailAddress ?? ''}`
 
-const selectedAddress = computed(() =>
-  confirmData.value?.addresses?.find((a) => a.id === selectedAddressId.value) ?? null,
+const selectedAddress = computed(
+  () => confirmData.value?.addresses?.find((a) => a.id === selectedAddressId.value) ?? null,
 )
 
 const loadConfirm = async () => {
@@ -98,7 +98,16 @@ onMounted(loadConfirm)
 
       <!-- 错误状态 -->
       <div v-else-if="errorMessage" class="empty-state error">
-        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          width="48"
+          height="48"
+          stroke="currentColor"
+          stroke-width="1.5"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -109,18 +118,29 @@ onMounted(loadConfirm)
 
       <!-- 正常内容 -->
       <template v-else-if="confirmData">
-
         <!-- 收货地址区 -->
         <section class="section-card">
           <div class="section-header">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
               <circle cx="12" cy="10" r="3"></circle>
             </svg>
             <h2 class="section-title">收货地址</h2>
           </div>
 
-          <div v-if="!confirmData.addresses || confirmData.addresses.length === 0" class="no-address">
+          <div
+            v-if="!confirmData.addresses || confirmData.addresses.length === 0"
+            class="no-address"
+          >
             暂无收货地址
           </div>
           <div v-else class="address-list">
@@ -150,7 +170,16 @@ onMounted(loadConfirm)
         <!-- 订单商品区 -->
         <section class="section-card">
           <div class="section-header">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -185,25 +214,28 @@ onMounted(loadConfirm)
         <!-- 支付方式 -->
         <section class="section-card">
           <div class="section-header">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
               <line x1="1" y1="10" x2="23" y2="10"></line>
             </svg>
             <h2 class="section-title">支付方式</h2>
           </div>
           <div class="payment-options">
-            <label
-              class="payment-option"
-              :class="{ active: payment === '0' }"
-            >
+            <label class="payment-option" :class="{ active: payment === '0' }">
               <input type="radio" v-model="payment" value="0" name="payment" />
               <span class="payment-radio"><span class="payment-dot"></span></span>
               <span class="payment-label">在线支付</span>
             </label>
-            <label
-              class="payment-option"
-              :class="{ active: payment === '1' }"
-            >
+            <label class="payment-option" :class="{ active: payment === '1' }">
               <input type="radio" v-model="payment" value="1" name="payment" />
               <span class="payment-radio"><span class="payment-dot"></span></span>
               <span class="payment-label">货到付款</span>
@@ -214,7 +246,16 @@ onMounted(loadConfirm)
         <!-- 订单备注 -->
         <section class="section-card">
           <div class="section-header">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
@@ -232,7 +273,16 @@ onMounted(loadConfirm)
         <!-- 金额汇总区 -->
         <section class="section-card summary-card">
           <div class="section-header">
-            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
@@ -302,7 +352,8 @@ onMounted(loadConfirm)
   min-height: 100vh;
   background-color: #f5f7fa;
   padding: 24px 20px 120px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #333;
 }
 
@@ -341,7 +392,9 @@ onMounted(loadConfirm)
   gap: 16px;
 }
 
-.empty-state.error { color: #f56c6c; }
+.empty-state.error {
+  color: #f56c6c;
+}
 
 .spinner {
   width: 32px;
@@ -352,7 +405,14 @@ onMounted(loadConfirm)
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
 .btn-retry {
   margin-top: 8px;
@@ -807,7 +867,7 @@ onMounted(loadConfirm)
   background-color: #fff5f5;
 }
 
-.payment-option input[type="radio"] {
+.payment-option input[type='radio'] {
   display: none;
 }
 

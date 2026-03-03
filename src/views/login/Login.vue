@@ -4,9 +4,7 @@
       <section class="brand-panel">
         <p class="brand-tag">SMART MALL</p>
         <h1 class="brand-title">欢迎回来</h1>
-        <p class="brand-subtitle">
-          登录后即可查看订单动态、管理收货地址，并享受你的专属优惠。
-        </p>
+        <p class="brand-subtitle">登录后即可查看订单动态、管理收货地址，并享受你的专属优惠。</p>
         <ul class="brand-points">
           <li>订单状态实时更新</li>
           <li>购物车与收藏跨端同步</li>
@@ -48,7 +46,12 @@
 
             <div class="social-login">
               <p class="social-title">社交登录</p>
-              <button class="social-icon-btn" type="button" @click="handleGithubLogin" title="GitHub 登录">
+              <button
+                class="social-icon-btn"
+                type="button"
+                @click="handleGithubLogin"
+                title="GitHub 登录"
+              >
                 <img src="/svg/github.svg" alt="GitHub 登录" />
               </button>
             </div>
@@ -71,7 +74,6 @@ import { useRouter } from 'vue-router'
 import { authLogin, type UserLogin } from '@/api/auth'
 
 defineOptions({ name: 'LoginPage' })
-
 
 const router = useRouter()
 const loading = ref(false)
@@ -108,7 +110,8 @@ const handleGithubLogin = () => {
 .login-page {
   min-height: 100vh;
   padding: 28px;
-  background: radial-gradient(circle at 0 0, #fff1dd 0, transparent 38%),
+  background:
+    radial-gradient(circle at 0 0, #fff1dd 0, transparent 38%),
     radial-gradient(circle at 100% 100%, #d8ecff 0, transparent 35%), #f6f8fc;
 }
 
@@ -256,7 +259,9 @@ input:focus {
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .social-login {

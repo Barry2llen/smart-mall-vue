@@ -27,16 +27,16 @@ export function sendCode(email: string) {
   })
 }
 
-// Correction based on swagger check: 
-// /sendCode: parameters email in query. requestBody string. 
+// Correction based on swagger check:
+// /sendCode: parameters email in query. requestBody string.
 // It's a bit ambiguous/redundant in swagger, but query is safer for "GET-like" POSTs or just following swagger param.
-// BUT, usually post implies body. Let's send key data in body if possible, but here swagger says param email. 
+// BUT, usually post implies body. Let's send key data in body if possible, but here swagger says param email.
 // I'll stick to what usually works: query params for 'in: query'.
 
 export function sendCodeWithBody(email: string) {
-    return request.post<any, RObject>(`${AUTH_API}/public/sendCode`, email, {
-        params: { email }
-    })
+  return request.post<any, RObject>(`${AUTH_API}/public/sendCode`, email, {
+    params: { email },
+  })
 }
 
 export function authLogin(data: UserLogin) {

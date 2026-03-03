@@ -28,7 +28,16 @@ const router = createRouter({
       name: 'orderConfirm',
       component: () => import('../views/order/ConfirmOrder.vue'),
     },
-
+    {
+      path: '/order/list',
+      name: 'orderList',
+      component: () => import('../views/order/OrderList.vue'),
+    },
+    {
+      path: '/order/detail/:orderSn',
+      name: 'orderDetail',
+      component: () => import('../views/order/OrderDetail.vue'),
+    },
   ],
 })
 

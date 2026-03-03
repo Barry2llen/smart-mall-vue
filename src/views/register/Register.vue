@@ -4,9 +4,7 @@
       <section class="brand-panel">
         <p class="brand-tag">SMART MALL</p>
         <h1 class="brand-title">开启你的品质购物之旅</h1>
-        <p class="brand-subtitle">
-          新会员注册即可体验更快下单、订单追踪和专属福利。
-        </p>
+        <p class="brand-subtitle">新会员注册即可体验更快下单、订单追踪和专属福利。</p>
         <ul class="brand-points">
           <li>新人专享礼包</li>
           <li>订单与售后全程可视化</li>
@@ -100,7 +98,6 @@ import { authRegister, sendCode, type UserRegister } from '@/api/auth'
 
 defineOptions({ name: 'RegisterPage' })
 
-
 const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
@@ -182,7 +179,8 @@ const handleRegister = async () => {
 .register-page {
   min-height: 100vh;
   padding: 28px;
-  background: radial-gradient(circle at 0 0, #fff1dd 0, transparent 38%),
+  background:
+    radial-gradient(circle at 0 0, #fff1dd 0, transparent 38%),
     radial-gradient(circle at 100% 100%, #d8ecff 0, transparent 35%), #f6f8fc;
 }
 
@@ -340,7 +338,9 @@ input:focus {
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
   flex-shrink: 0;
 }
 
@@ -365,7 +365,9 @@ input:focus {
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .submit-btn:hover:not(:disabled) {

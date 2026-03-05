@@ -8,6 +8,8 @@ import type {
 } from 'axios'
 
 const ACCESS_TOKEN_KEY = 'access_token'
+const ID_FIELD_PATTERN =
+  /"((?:id|Id|ID)|(?:[A-Za-z_][A-Za-z0-9_]*?(?:Id|ID|_id|_ID|Cid|CID|cid)))"\s*:\s*(-?\d+)/g
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean
@@ -15,6 +17,39 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 }
 
 const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY)
+
+const stringifyNumericIdFields = (jsonText: string) => {
+  return jsonText.replace(ID_FIELD_PATTERN, (_, key: string, value: string) => {
+    return `"${key}":"${value}"`
+  })
+}
+
+const parseJsonResponse = (data: unknown) => {
+  if (typeof data !== 'string') {
+    return data
+  }
+
+  const text = data.trim()
+  if (!text) {
+    return data
+  }
+
+  const isJsonLike =
+    (text.startsWith('{') && text.endsWith('}')) || (text.startsWith('[') && text.endsWith(']'))
+  if (!isJsonLike) {
+    return data
+  }
+
+  try {
+    return JSON.parse(stringifyNumericIdFields(text))
+  } catch {
+    try {
+      return JSON.parse(text)
+    } catch {
+      return data
+    }
+  }
+}
 
 const saveAccessTokenFromHeaders = (headers?: AxiosResponse['headers']) => {
   const authorization = headers?.authorization || headers?.Authorization
@@ -33,6 +68,11 @@ const service: AxiosInstance = axios.create({
   baseURL: '/api', // Proxy will handle /api -> http://localhost:8080 (or appropriate backend)
   timeout: 10000,
   withCredentials: true,
+  transformResponse: [
+    (data: unknown) => {
+      return parseJsonResponse(data)
+    },
+  ],
 })
 
 // Request interceptor

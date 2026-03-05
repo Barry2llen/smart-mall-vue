@@ -14,15 +14,15 @@ export interface FlashSaleSessionQuery {
 }
 
 export interface SessionRelatedSkuInfoVO {
-  id?: number
-  promotionId?: number
-  spuId?: number
-  skuId?: number
+  id?: string
+  promotionId?: string
+  spuId?: string
+  skuId?: string
   seckillPrice?: number
   seckillCount?: number
   seckillLimit?: number
   seckillSort?: number
-  catalogId?: number
+  catalogId?: string
   skuName?: string
   skuDesc?: string
   skuDefaultImg?: string
@@ -32,7 +32,7 @@ export interface SessionRelatedSkuInfoVO {
 }
 
 export interface SessionVO {
-  id?: number
+  id?: string
   name?: string
   startTime?: string
   endTime?: string

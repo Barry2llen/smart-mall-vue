@@ -69,9 +69,9 @@ export interface ProductSearchResult {
 }
 
 export interface CategoryVO {
-  catId?: number
+  catId?: string
   name?: string
-  parentCid?: number
+  parentCid?: string
   catLevel?: number
   showStatus?: number
   sort?: number
@@ -81,7 +81,8 @@ export interface CategoryVO {
   children?: CategoryVO[]
 }
 
-const PRODUCT_API = '/search'
+const SEARCH_API = '/search'
+const PRODUCT_API = '/product'
 
 const cleanArray = <T>(list?: T[]) => {
   if (!Array.isArray(list)) {
@@ -154,7 +155,7 @@ export const buildProductSearchPayload = (params: ProductSearchParam = {}): Prod
 
 export function searchProducts(params: ProductSearchParam = {}) {
   return request.post<RObject<ProductSearchResult>, RObject<ProductSearchResult>>(
-    `${PRODUCT_API}/public/product/search`,
+    `${SEARCH_API}/public/product/search`,
     buildProductSearchPayload(params),
   )
 }

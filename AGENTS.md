@@ -63,6 +63,11 @@ Pull requests should include:
 - `vite.config.ts` already defines the backend gateway; all frontend requests must start with `/api`.
 - Add `/{service-name}` after `/api` based on the target Swagger document (for example, `swagger-auth.json` -> `/api/auth`, `swagger-order.json` -> `/api/order`).
 
+## ID Precision Rule
+- For all backend `id`-like fields (`id`, `*Id`, `*id`, `cid`), always use `string` in frontend types, state, route query, and request payloads.
+- Do not model backend `int64` ids as JavaScript `number`.
+- When parsing API responses, preserve id values as strings to avoid bigint precision loss.
+
 ## Skills
 A skill is a set of local instructions stored in a `SKILL.md` file. Use the listed skills when the request clearly matches their purpose or the user names them explicitly.
 

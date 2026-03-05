@@ -17,6 +17,43 @@
         }
     ],
     "paths": {
+        "/public/product/item/{skuId}": {
+            "get": {
+                "tags": [
+                    "商品接口"
+                ],
+                "summary": "获取商品详情",
+                "operationId": "getSkuItem",
+                "parameters": [
+                    {
+                        "name": "skuId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "sid",
+                        "in": "query",
+                        "description": "Sku主键"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RSkuItemVO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/public/product/category/list": {
             "get": {
                 "tags": [
@@ -41,6 +78,213 @@
     },
     "components": {
         "schemas": {
+            "RSkuItemVO": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SkuItemVO"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
+            "SkuImages": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "id",
+                        "format": "int64"
+                    },
+                    "skuId": {
+                        "type": "integer",
+                        "description": "sku_id",
+                        "format": "int64"
+                    },
+                    "imgUrl": {
+                        "type": "string",
+                        "description": "图片地址"
+                    },
+                    "imgSort": {
+                        "type": "integer",
+                        "description": "排序",
+                        "format": "int32"
+                    },
+                    "defaultImg": {
+                        "type": "integer",
+                        "description": "默认图[0 - 不是默认图，1 - 是默认图]",
+                        "format": "int32"
+                    }
+                },
+                "description": "sku图片"
+            },
+            "SkuInfoVO": {
+                "type": "object",
+                "properties": {
+                    "skuId": {
+                        "type": "integer",
+                        "description": "skuId",
+                        "format": "int64"
+                    },
+                    "spuId": {
+                        "type": "integer",
+                        "description": "spuId",
+                        "format": "int64"
+                    },
+                    "catalogId": {
+                        "type": "integer",
+                        "description": "所属分类id",
+                        "format": "int64"
+                    },
+                    "skuName": {
+                        "type": "string",
+                        "description": "sku名称"
+                    },
+                    "skuDesc": {
+                        "type": "string",
+                        "description": "sku介绍描述"
+                    },
+                    "skuDefaultImg": {
+                        "type": "string",
+                        "description": "默认图片"
+                    },
+                    "skuTitle": {
+                        "type": "string",
+                        "description": "标题"
+                    },
+                    "skuSubtitle": {
+                        "type": "string",
+                        "description": "副标题"
+                    },
+                    "price": {
+                        "type": "number",
+                        "description": "价格"
+                    },
+                    "saleCount": {
+                        "type": "integer",
+                        "description": "销量",
+                        "format": "int64"
+                    }
+                },
+                "description": "sku信息"
+            },
+            "SkuItemSaleAttrVO": {
+                "type": "object",
+                "properties": {
+                    "attrId": {
+                        "type": "integer",
+                        "description": "属性id",
+                        "format": "int64"
+                    },
+                    "attrName": {
+                        "type": "string",
+                        "description": "属性名"
+                    },
+                    "attrValues": {
+                        "type": "string",
+                        "description": "所有可能的属性值"
+                    }
+                },
+                "description": "销售属性"
+            },
+            "SkuItemVO": {
+                "type": "object",
+                "properties": {
+                    "skuInfo": {
+                        "$ref": "#/components/schemas/SkuInfoVO"
+                    },
+                    "images": {
+                        "type": "array",
+                        "description": "sku图片",
+                        "items": {
+                            "$ref": "#/components/schemas/SkuImages"
+                        }
+                    },
+                    "saleAttr": {
+                        "type": "array",
+                        "description": "商品销售属性组合",
+                        "items": {
+                            "$ref": "#/components/schemas/SkuItemSaleAttrVO"
+                        }
+                    },
+                    "desp": {
+                        "$ref": "#/components/schemas/SpuInfoDesc"
+                    },
+                    "groupAttrs": {
+                        "type": "array",
+                        "description": "spu商品规格参数",
+                        "items": {
+                            "$ref": "#/components/schemas/SpuItemAttrGroupVO"
+                        }
+                    }
+                },
+                "description": "商品详情信息"
+            },
+            "SpuBaseAttrVO": {
+                "type": "object",
+                "properties": {
+                    "attrId": {
+                        "type": "integer",
+                        "description": "属性id",
+                        "format": "int64"
+                    },
+                    "attrName": {
+                        "type": "string",
+                        "description": "属性名"
+                    },
+                    "attrValue": {
+                        "type": "string",
+                        "description": "属性值"
+                    }
+                },
+                "description": "规格参数属性"
+            },
+            "SpuInfoDesc": {
+                "type": "object",
+                "properties": {
+                    "spuId": {
+                        "type": "integer",
+                        "description": "商品id",
+                        "format": "int64"
+                    },
+                    "decript": {
+                        "type": "string",
+                        "description": "商品介绍"
+                    }
+                },
+                "description": "spu信息介绍"
+            },
+            "SpuItemAttrGroupVO": {
+                "type": "object",
+                "properties": {
+                    "groupName": {
+                        "type": "string",
+                        "description": "属性分组名称"
+                    },
+                    "attrs": {
+                        "type": "array",
+                        "description": "属性组内属性及值",
+                        "items": {
+                            "$ref": "#/components/schemas/SpuBaseAttrVO"
+                        }
+                    }
+                },
+                "description": "spu商品属性"
+            },
             "CategoryVO": {
                 "type": "object",
                 "properties": {

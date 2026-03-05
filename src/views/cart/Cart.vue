@@ -19,14 +19,14 @@ const loading = ref(false)
 const errorMessage = ref('')
 const actionMessage = ref('')
 const cart = ref<Cart | null>(null)
-const pendingSkuIds = ref<number[]>([])
-const countOverrides = ref<Record<number, number>>({})
-const selectedOverrides = ref<Record<number, boolean>>({})
+const pendingSkuIds = ref<string[]>([])
+const countOverrides = ref<Record<string, number>>({})
+const selectedOverrides = ref<Record<string, boolean>>({})
 const silentRefreshTimer = ref<number | null>(null)
 const summaryCalculating = ref(true)
 const summarySyncing = ref(false)
-const countDebounceTimers = new Map<number, number>()
-const selectedDebounceTimers = new Map<number, number>()
+const countDebounceTimers = new Map<string, number>()
+const selectedDebounceTimers = new Map<string, number>()
 
 const DEBOUNCE_DELAY = 400
 const SILENT_REFRESH_DELAY = 800
@@ -137,33 +137,33 @@ const handleRefresh = () => {
   void loadCart()
 }
 
-const markPending = (skuId: number) => {
+const markPending = (skuId: string) => {
   if (!pendingSkuIds.value.includes(skuId)) {
     pendingSkuIds.value = [...pendingSkuIds.value, skuId]
   }
 }
 
-const clearPending = (skuId: number) => {
+const clearPending = (skuId: string) => {
   pendingSkuIds.value = pendingSkuIds.value.filter((id) => id !== skuId)
 }
 
-const isPending = (skuId: number) => {
+const isPending = (skuId: string) => {
   return pendingSkuIds.value.includes(skuId)
 }
 
-const removeCountOverride = (skuId: number) => {
+const removeCountOverride = (skuId: string) => {
   const nextOverrides = { ...countOverrides.value }
   delete nextOverrides[skuId]
   countOverrides.value = nextOverrides
 }
 
-const removeSelectedOverride = (skuId: number) => {
+const removeSelectedOverride = (skuId: string) => {
   const nextOverrides = { ...selectedOverrides.value }
   delete nextOverrides[skuId]
   selectedOverrides.value = nextOverrides
 }
 
-const clearSkuTimer = (timers: Map<number, number>, skuId: number) => {
+const clearSkuTimer = (timers: Map<string, number>, skuId: string) => {
   const timer = timers.get(skuId)
   if (timer) {
     clearTimeout(timer)
@@ -171,7 +171,7 @@ const clearSkuTimer = (timers: Map<number, number>, skuId: number) => {
   timers.delete(skuId)
 }
 
-const scheduleSkuDebounce = (timers: Map<number, number>, skuId: number, task: () => void) => {
+const scheduleSkuDebounce = (timers: Map<string, number>, skuId: string, task: () => void) => {
   clearSkuTimer(timers, skuId)
   const timer = window.setTimeout(() => {
     timers.delete(skuId)
@@ -180,11 +180,11 @@ const scheduleSkuDebounce = (timers: Map<number, number>, skuId: number, task: (
   timers.set(skuId, timer)
 }
 
-const removeCountTimer = (skuId: number) => {
+const removeCountTimer = (skuId: string) => {
   clearSkuTimer(countDebounceTimers, skuId)
 }
 
-const removeSelectedTimer = (skuId: number) => {
+const removeSelectedTimer = (skuId: string) => {
   clearSkuTimer(selectedDebounceTimers, skuId)
 }
 
@@ -201,7 +201,7 @@ const scheduleSilentRefresh = () => {
   }, SILENT_REFRESH_DELAY)
 }
 
-const syncSelected = (skuId: number, selected: boolean, previousSelected: boolean) => {
+const syncSelected = (skuId: string, selected: boolean, previousSelected: boolean) => {
   if (cart.value) {
     cart.value.items = (cart.value.items || []).map((item) =>
       item.skuId === skuId ? { ...item, selected } : item,
@@ -225,7 +225,7 @@ const syncSelected = (skuId: number, selected: boolean, previousSelected: boolea
     })
 }
 
-const syncCount = (skuId: number, nextCount: number, previousCount: number) => {
+const syncCount = (skuId: string, nextCount: number, previousCount: number) => {
   if (cart.value) {
     cart.value.items = (cart.value.items || []).map((item) =>
       item.skuId === skuId

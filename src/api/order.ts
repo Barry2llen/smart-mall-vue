@@ -1,8 +1,8 @@
 import request from '@/utils/request'
 
 export interface MemberReceiveAddress {
-  id: number
-  memberId: number
+  id: string
+  memberId: string
   name: string
   phone: string
   postCode: string
@@ -15,8 +15,8 @@ export interface MemberReceiveAddress {
 }
 
 export interface OrderItemVO {
-  skuId: number
-  spuId: number
+  skuId: string
+  spuId: string
   title: string
   image: string
   skuAttr: string[]
@@ -35,7 +35,7 @@ export interface OrderConfirm {
 }
 
 export interface OrderSubmit {
-  addrId: number
+  addrId: string
   payment: string
   token: string
   price: number
@@ -63,8 +63,8 @@ export function submitOrder(data: OrderSubmit) {
 }
 
 export interface OrderListSkuItem {
-  skuId: number
-  categoryId?: number
+  skuId: string
+  categoryId?: string
   skuName: string
   skuPic: string
   skuPrice: number
@@ -79,7 +79,7 @@ export interface OrderListSkuItem {
 }
 
 export interface OrderListSpuItem {
-  spuId: number
+  spuId: string
   spuName: string
   spuPic: string
   spuBrand: string
@@ -87,10 +87,10 @@ export interface OrderListSpuItem {
 }
 
 export interface Order {
-  id: number
-  memberId?: number
+  id: string
+  memberId?: string
   orderSn: string
-  couponId?: number
+  couponId?: string
   memberUsername?: string
   totalAmount?: number
   payAmount?: number

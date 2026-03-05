@@ -1,0 +1,129 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "OpenAPI definition",
+        "version": "v0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Generated server url"
+        }
+    ],
+    "tags": [
+        {
+            "name": "商品接口",
+            "description": "提供商品相关的API"
+        }
+    ],
+    "paths": {
+        "/public/product/category/list": {
+            "get": {
+                "tags": [
+                    "商品接口"
+                ],
+                "summary": "以树形结构查出所有分类以及子分类",
+                "operationId": "list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RListCategoryVO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CategoryVO": {
+                "type": "object",
+                "properties": {
+                    "catId": {
+                        "type": "integer",
+                        "description": "分类id",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "分类名称"
+                    },
+                    "parentCid": {
+                        "type": "integer",
+                        "description": "父分类id",
+                        "format": "int64"
+                    },
+                    "catLevel": {
+                        "type": "integer",
+                        "description": "层级",
+                        "format": "int32"
+                    },
+                    "showStatus": {
+                        "type": "integer",
+                        "description": "是否显示[0-不显示，1显示]",
+                        "format": "int32"
+                    },
+                    "sort": {
+                        "type": "integer",
+                        "description": "排序",
+                        "format": "int32"
+                    },
+                    "icon": {
+                        "type": "string",
+                        "description": "图标地址"
+                    },
+                    "productUnit": {
+                        "type": "string",
+                        "description": "计量单位"
+                    },
+                    "productCount": {
+                        "type": "integer",
+                        "description": "商品数量",
+                        "format": "int32"
+                    },
+                    "children": {
+                        "type": "array",
+                        "description": "当前分类的子分类",
+                        "items": {
+                            "$ref": "#/components/schemas/CategoryVO"
+                        }
+                    }
+                },
+                "description": "数据"
+            },
+            "RListCategoryVO": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "array",
+                        "description": "数据",
+                        "items": {
+                            "$ref": "#/components/schemas/CategoryVO"
+                        }
+                    }
+                },
+                "description": "统一http请求返回格式"
+            }
+        }
+    }
+}

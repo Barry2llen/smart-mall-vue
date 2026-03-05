@@ -56,7 +56,7 @@ let refreshTokenPromise: Promise<void> | null = null
 const refreshAccessToken = async () => {
   if (!refreshTokenPromise) {
     refreshTokenPromise = service
-      .get('/auth/refresh', { _skipAuthRefresh: true } as CustomAxiosRequestConfig)
+      .get('/auth/public/refresh', { _skipAuthRefresh: true } as CustomAxiosRequestConfig)
       .then(() => undefined)
       .finally(() => {
         refreshTokenPromise = null
@@ -80,7 +80,7 @@ service.interceptors.response.use(
     // You can handle custom error codes here if your backend returns { code: ..., data: ... }
     // For now, we return the data directly or the full response depending on convention
     // Based on swagger RObject, we might want to check res.code
-    if (res.code && res.code !== '0' && res.code !== 0) {
+    if (res.code && !['0', 0, '200', 200, 'SUCCESS', 'success'].includes(res.code)) {
       // Handle business error
       console.error('API Error:', res.msg)
       return Promise.reject(new Error(res.msg || 'Error'))

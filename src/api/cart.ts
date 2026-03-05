@@ -1,8 +1,8 @@
 import request from '@/utils/request'
 
 export interface CartItemVO {
-  skuId: number
-  spuId: number
+  skuId: string
+  spuId: string
   selected: boolean
   title: string
   image: string
@@ -31,19 +31,19 @@ export function getCart() {
   return request.get<RCart, RCart>('/cart/public').then((res) => res.data)
 }
 
-export function checkCartItem(skuId: number) {
+export function checkCartItem(skuId: string) {
   return request.put(`/cart/public/${skuId}/check`)
 }
 
-export function uncheckCartItem(skuId: number) {
+export function uncheckCartItem(skuId: string) {
   return request.put(`/cart/public/${skuId}/uncheck`)
 }
 
-export function deleteCartItem(skuId: number) {
+export function deleteCartItem(skuId: string) {
   return request.delete(`/cart/public/${skuId}`)
 }
 
-export function updateCartItemCount(skuId: number, count: number) {
+export function updateCartItemCount(skuId: string, count: number) {
   return request.put(`/cart/public/${skuId}/count`, null, {
     params: { count },
   })

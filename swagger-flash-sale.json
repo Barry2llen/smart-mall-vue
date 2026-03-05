@@ -1,0 +1,230 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "OpenAPI definition",
+        "version": "v0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8989",
+            "description": "Generated server url"
+        }
+    ],
+    "tags": [
+        {
+            "name": "秒杀活动接口",
+            "description": "提供秒杀活动相关的API"
+        }
+    ],
+    "paths": {
+        "/public/flash-sale/sessions": {
+            "get": {
+                "tags": [
+                    "秒杀活动接口"
+                ],
+                "description": "获取秒杀活动场次列表",
+                "operationId": "getFlashSaleSessions",
+                "parameters": [
+                    {
+                        "name": "withExpired",
+                        "in": "query",
+                        "description": "是否包含已过期的场次，默认为false",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "withProducts",
+                        "in": "query",
+                        "description": "是否包含商品信息，默认为false",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码（从1开始），默认为1",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量（1-100），默认为10",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RListSessionVO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "RListSessionVO": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "array",
+                        "description": "数据",
+                        "items": {
+                            "$ref": "#/components/schemas/SessionVO"
+                        }
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
+            "SessionRelatedSkuInfoVO": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "id",
+                        "format": "int64"
+                    },
+                    "promotionId": {
+                        "type": "integer",
+                        "description": "促销活动id",
+                        "format": "int64"
+                    },
+                    "spuId": {
+                        "type": "integer",
+                        "description": "商品spu id",
+                        "format": "int64"
+                    },
+                    "skuId": {
+                        "type": "integer",
+                        "description": "商品sku id",
+                        "format": "int64"
+                    },
+                    "seckillPrice": {
+                        "type": "number",
+                        "description": "秒杀价格"
+                    },
+                    "seckillCount": {
+                        "type": "integer",
+                        "description": "秒杀总量",
+                        "format": "int32"
+                    },
+                    "seckillLimit": {
+                        "type": "integer",
+                        "description": "每人限购数量",
+                        "format": "int32"
+                    },
+                    "seckillSort": {
+                        "type": "integer",
+                        "description": "排序",
+                        "format": "int32"
+                    },
+                    "catalogId": {
+                        "type": "integer",
+                        "description": "所属分类id",
+                        "format": "int64"
+                    },
+                    "skuName": {
+                        "type": "string",
+                        "description": "sku名称"
+                    },
+                    "skuDesc": {
+                        "type": "string",
+                        "description": "sku介绍描述"
+                    },
+                    "skuDefaultImg": {
+                        "type": "string",
+                        "description": "默认图片"
+                    },
+                    "skuTitle": {
+                        "type": "string",
+                        "description": "标题"
+                    },
+                    "skuSubtitle": {
+                        "type": "string",
+                        "description": "副标题"
+                    },
+                    "saleCount": {
+                        "type": "integer",
+                        "description": "销量",
+                        "format": "int64"
+                    }
+                },
+                "description": "秒杀活动场次关联的商品信息"
+            },
+            "SessionVO": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "场次id",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "场次名称"
+                    },
+                    "startTime": {
+                        "type": "string",
+                        "description": "每日开始时间",
+                        "format": "date-time"
+                    },
+                    "endTime": {
+                        "type": "string",
+                        "description": "每日结束时间",
+                        "format": "date-time"
+                    },
+                    "createTime": {
+                        "type": "string",
+                        "description": "创建时间",
+                        "format": "date-time"
+                    },
+                    "skuInfos": {
+                        "type": "array",
+                        "description": "秒杀活动场次关联的商品信息列表",
+                        "items": {
+                            "$ref": "#/components/schemas/SessionRelatedSkuInfoVO"
+                        }
+                    }
+                },
+                "description": "秒杀活动场次信息的VO对象"
+            }
+        }
+    }
+}

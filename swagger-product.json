@@ -17,6 +17,39 @@
         }
     ],
     "paths": {
+        "/public/product/spu/{spuId}/sku-attrs-mapping": {
+            "get": {
+                "tags": [
+                    "商品接口"
+                ],
+                "summary": "获取skuId与销售属性值的映射关系（key=attr1Id:attr1Value_attr2Id:attr2Value_...）\n（以此类推，其中attrId先按升序排序再组合）\n（该map的value为另一种属性组合的skuId）",
+                "operationId": "getSpuSkuAttrsMapping",
+                "parameters": [
+                    {
+                        "name": "spuId",
+                        "in": "path",
+                        "description": "Spu主键",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RMapStringLong"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/public/product/item/{skuId}": {
             "get": {
                 "tags": [
@@ -78,6 +111,36 @@
     },
     "components": {
         "schemas": {
+            "RMapStringLong": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "description": "数据",
+                            "format": "int64"
+                        },
+                        "description": "数据"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
             "RSkuItemVO": {
                 "type": "object",
                 "properties": {

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { addCartItem } from '@/api/cart'
 import {
+  getSpuSkuAttrsMapping,
   getSkuItem,
   type SkuItemSaleAttrVO,
   type SkuItemVO,
@@ -24,13 +26,21 @@ interface SaleAttrDisplay {
   values: string[]
 }
 
+type SelectedSaleAttrMap = Record<string, string>
+
 const route = useRoute()
 const router = useRouter()
 
 const loading = ref(false)
 const errorMessage = ref('')
+const actionMessage = ref('')
+const submittingCart = ref(false)
+const switchingSku = ref(false)
+const selectedCount = ref(1)
 const productItem = ref<SkuItemVO | null>(null)
 const activeImageUrl = ref('')
+const skuAttrValueMapping = ref<Record<string, string>>({})
+const selectedSaleAttrMap = ref<SelectedSaleAttrMap>({})
 
 const inFlashSale = ref(false)
 const flashLoading = ref(false)
@@ -42,6 +52,7 @@ const activeSessionDetail = ref<SessionVO | null>(null)
 
 let loadSerial = 0
 let flashDetailSerial = 0
+let preservedCountOnSwitch: number | null = null
 
 const skuId = computed(() => {
   const value = route.params.skuId
@@ -74,25 +85,33 @@ const currentImage = computed(() => {
   return galleryImages.value[0] || ''
 })
 
-const saleAttrs = computed<SaleAttrDisplay[]>(() => {
-  const attrs = Array.isArray(productItem.value?.saleAttr) ? productItem.value?.saleAttr : []
+const buildSaleAttrs = (item?: SkuItemVO | null): SaleAttrDisplay[] => {
+  const attrs = Array.isArray(item?.saleAttr) ? item.saleAttr : []
   return attrs
-    .map((item: SkuItemSaleAttrVO) => {
-      const values = String(item.attrValues || '')
+    .map((attr: SkuItemSaleAttrVO) => {
+      const values = String(attr.attrValues || '')
         .split(/[，,;；|、/]/)
         .map((value) => value.trim())
         .filter(Boolean)
       return {
-        attrId: String(item.attrId || ''),
-        attrName: item.attrName || '销售属性',
+        attrId: String(attr.attrId || ''),
+        attrName: attr.attrName || '销售属性',
         values,
       }
     })
-    .filter((item) => item.values.length)
+    .filter((attr) => attr.attrId && attr.values.length)
+}
+
+const saleAttrs = computed<SaleAttrDisplay[]>(() => {
+  return buildSaleAttrs(productItem.value)
 })
 
 const specGroups = computed<SpuItemAttrGroupVO[]>(() => {
   return Array.isArray(productItem.value?.groupAttrs) ? productItem.value?.groupAttrs || [] : []
+})
+
+const canSwitchSkuByAttr = computed(() => {
+  return saleAttrs.value.length > 0 && Object.keys(selectedSaleAttrMap.value).length > 0
 })
 
 const descImages = computed(() => {
@@ -179,10 +198,7 @@ const chooseBestSession = (sessions: FlashSaleSession[]) => {
       const start = session.startTime ? new Date(session.startTime).getTime() : Number.NaN
       return !Number.isNaN(start) && start > now
     })
-    .sort(
-      (a, b) =>
-        new Date(a.startTime || '').getTime() - new Date(b.startTime || '').getTime(),
-    )
+    .sort((a, b) => new Date(a.startTime || '').getTime() - new Date(b.startTime || '').getTime())
 
   if (upcoming.length) {
     return upcoming[0]
@@ -200,6 +216,91 @@ const chooseBestSession = (sessions: FlashSaleSession[]) => {
 
 const toErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
+
+const compareAttrId = (left: string, right: string) => {
+  if (/^\d+$/.test(left) && /^\d+$/.test(right)) {
+    const leftValue = BigInt(left)
+    const rightValue = BigInt(right)
+    if (leftValue === rightValue) {
+      return 0
+    }
+    return leftValue > rightValue ? 1 : -1
+  }
+
+  return left.localeCompare(right, 'zh-CN')
+}
+
+const parseMappingKey = (key: string) => {
+  return key
+    .split('_')
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .reduce<SelectedSaleAttrMap>((acc, segment) => {
+      const separatorIndex = segment.indexOf(':')
+      if (separatorIndex <= 0) {
+        return acc
+      }
+      const attrId = segment.slice(0, separatorIndex).trim()
+      const attrValue = segment.slice(separatorIndex + 1).trim()
+      if (attrId && attrValue) {
+        acc[attrId] = attrValue
+      }
+      return acc
+    }, {})
+}
+
+const normalizeSkuAttrValueMapping = (raw?: Record<string, string>) => {
+  if (!raw || typeof raw !== 'object') {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(raw).map(([key, value]) => [key, String(value ?? '')]).filter(([, value]) => Boolean(value)),
+  )
+}
+
+const resolveSelectedSaleAttrs = (currentSkuId: string) => {
+  if (!saleAttrs.value.length || !Object.keys(skuAttrValueMapping.value).length) {
+    return {}
+  }
+
+  const targetEntry = Object.entries(skuAttrValueMapping.value).find(
+    ([, value]) => String(value || '') === currentSkuId,
+  )
+  if (!targetEntry) {
+    return {}
+  }
+
+  const selectedMap = parseMappingKey(targetEntry[0])
+  const isComplete = saleAttrs.value.every((attr) => selectedMap[attr.attrId])
+  return isComplete ? selectedMap : {}
+}
+
+const buildCombinationKey = (selection: SelectedSaleAttrMap) => {
+  if (!saleAttrs.value.length) {
+    return ''
+  }
+
+  const entries = [...saleAttrs.value].sort((left, right) => compareAttrId(left.attrId, right.attrId)).map((attr) => {
+    const value = selection[attr.attrId]
+    return value ? `${attr.attrId}:${value}` : ''
+  })
+
+  return entries.every(Boolean) ? entries.join('_') : ''
+}
+
+const resolveTargetSkuId = (attrId: string, nextValue: string) => {
+  if (!canSwitchSkuByAttr.value) {
+    return ''
+  }
+
+  const nextSelection = {
+    ...selectedSaleAttrMap.value,
+    [attrId]: nextValue,
+  }
+  const combinationKey = buildCombinationKey(nextSelection)
+  return combinationKey ? skuAttrValueMapping.value[combinationKey] || '' : ''
+}
 
 const resetFlashState = () => {
   inFlashSale.value = false
@@ -286,21 +387,24 @@ const loadProductDetail = async () => {
   const serial = ++loadSerial
 
   errorMessage.value = ''
+  actionMessage.value = ''
   productItem.value = null
   activeImageUrl.value = ''
+  skuAttrValueMapping.value = {}
+  selectedSaleAttrMap.value = {}
+  selectedCount.value = preservedCountOnSwitch && preservedCountOnSwitch > 0 ? preservedCountOnSwitch : 1
   resetFlashState()
 
   if (!currentSkuId) {
     errorMessage.value = '商品编号缺失'
+    switchingSku.value = false
+    preservedCountOnSwitch = null
     return
   }
 
   loading.value = true
   try {
-    const [productRes, flashRes] = await Promise.all([
-      getSkuItem(currentSkuId),
-      isSkuInFlashSale(currentSkuId),
-    ])
+    const [productRes, flashRes] = await Promise.all([getSkuItem(currentSkuId), isSkuInFlashSale(currentSkuId)])
 
     if (serial !== loadSerial) {
       return
@@ -311,6 +415,24 @@ const loadProductDetail = async () => {
       errorMessage.value = '未找到商品详情'
       return
     }
+
+    const currentSpuId = String(productItem.value.skuInfo.spuId || '')
+    if (currentSpuId) {
+      try {
+        const mappingRes = await getSpuSkuAttrsMapping(currentSpuId)
+        if (serial !== loadSerial) {
+          return
+        }
+        skuAttrValueMapping.value = normalizeSkuAttrValueMapping(mappingRes.data)
+      } catch {
+        if (serial !== loadSerial) {
+          return
+        }
+        skuAttrValueMapping.value = {}
+      }
+    }
+
+    selectedSaleAttrMap.value = resolveSelectedSaleAttrs(currentSkuId)
 
     inFlashSale.value = Boolean(flashRes.data)
     if (inFlashSale.value) {
@@ -324,12 +446,49 @@ const loadProductDetail = async () => {
   } finally {
     if (serial === loadSerial) {
       loading.value = false
+      switchingSku.value = false
+      preservedCountOnSwitch = null
     }
   }
 }
 
 const chooseImage = (url: string) => {
   activeImageUrl.value = url
+}
+
+const isSaleAttrSelected = (attrId: string, value: string) => {
+  return selectedSaleAttrMap.value[attrId] === value
+}
+
+const isSaleAttrDisabled = (attrId: string, value: string) => {
+  if (switchingSku.value || !canSwitchSkuByAttr.value) {
+    return true
+  }
+  if (isSaleAttrSelected(attrId, value)) {
+    return false
+  }
+  return !resolveTargetSkuId(attrId, value)
+}
+
+const selectSaleAttr = async (attrId: string, value: string) => {
+  if (switchingSku.value || isSaleAttrSelected(attrId, value)) {
+    return
+  }
+
+  const targetSkuId = resolveTargetSkuId(attrId, value)
+  if (!targetSkuId || targetSkuId === skuId.value) {
+    return
+  }
+
+  switchingSku.value = true
+  preservedCountOnSwitch = selectedCount.value
+
+  try {
+    await router.push({ name: 'productDetail', params: { skuId: targetSkuId } })
+  } catch {
+    switchingSku.value = false
+    preservedCountOnSwitch = null
+  }
 }
 
 const selectFlashSession = (session: FlashSaleSession) => {
@@ -339,6 +498,45 @@ const selectFlashSession = (session: FlashSaleSession) => {
   }
   activeSessionId.value = targetId
   void fetchSessionDetail(targetId, undefined, true)
+}
+
+const changeCount = (delta: number) => {
+  if (submittingCart.value) {
+    return
+  }
+  selectedCount.value = Math.max(1, selectedCount.value + delta)
+}
+
+const handleAddToCart = async () => {
+  const info = skuInfo.value
+  if (!info?.skuId || submittingCart.value) {
+    return
+  }
+
+  submittingCart.value = true
+  actionMessage.value = ''
+
+  try {
+    await addCartItem({
+      skuId: String(info.skuId),
+      count: selectedCount.value,
+    })
+
+    await router.push({
+      name: 'cartSuccess',
+      query: {
+        skuId: String(info.skuId),
+        title: info.skuTitle || info.skuName || '商品',
+        image: currentImage.value,
+        price: String(info.price ?? ''),
+        count: String(selectedCount.value),
+      },
+    })
+  } catch (error) {
+    actionMessage.value = toErrorMessage(error, '加入购物车失败，请稍后重试')
+  } finally {
+    submittingCart.value = false
+  }
 }
 
 const goBack = () => {
@@ -437,16 +635,44 @@ watch(
 
           <div class="meta-row">
             <span>销量 {{ Number(skuInfo.saleCount || 0) }}</span>
-            <span>SKU：{{ skuInfo.skuId || '--' }}</span>
-            <span>SPU：{{ skuInfo.spuId || '--' }}</span>
-            <span>分类：{{ skuInfo.catalogId || '--' }}</span>
+          </div>
+
+          <p v-if="actionMessage" class="action-message">{{ actionMessage }}</p>
+
+          <div class="purchase-panel">
+            <div class="purchase-label">购买数量</div>
+            <div class="purchase-controls">
+              <div class="quantity-controller" aria-label="购买数量选择器">
+                <button type="button" class="btn-qty" :disabled="submittingCart || selectedCount <= 1" @click="changeCount(-1)">
+                  -
+                </button>
+                <span class="qty-value">{{ selectedCount }}</span>
+                <button type="button" class="btn-qty" :disabled="submittingCart" @click="changeCount(1)">+</button>
+              </div>
+              <button class="btn-add-cart" type="button" :disabled="submittingCart" @click="handleAddToCart">
+                {{ submittingCart ? '加入中...' : '加入购物车' }}
+              </button>
+            </div>
           </div>
 
           <div class="attr-list" v-if="saleAttrs.length">
             <div class="attr-row" v-for="attr in saleAttrs" :key="`${attr.attrId}-${attr.attrName}`">
               <label>{{ attr.attrName }}</label>
               <div class="chips">
-                <span v-for="value in attr.values" :key="value" class="chip">{{ value }}</span>
+                <button
+                  v-for="value in attr.values"
+                  :key="value"
+                  type="button"
+                  class="chip"
+                  :class="{
+                    selected: isSaleAttrSelected(attr.attrId, value),
+                    disabled: isSaleAttrDisabled(attr.attrId, value),
+                  }"
+                  :disabled="isSaleAttrDisabled(attr.attrId, value)"
+                  @click="selectSaleAttr(attr.attrId, value)"
+                >
+                  {{ value }}
+                </button>
               </div>
             </div>
           </div>
@@ -736,6 +962,93 @@ watch(
   font-size: 12px;
 }
 
+.action-message {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #b12637;
+  background: #fff2f4;
+  border: 1px solid #ffd5da;
+}
+
+.purchase-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #f0d6d9;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffafa 0%, #fff 100%);
+}
+
+.purchase-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.purchase-controls {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.quantity-controller {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #e4d5d7;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.btn-qty {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: #fff7f8;
+  color: #9a2231;
+  font-size: 22px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-qty:hover:not(:disabled) {
+  background: #ffe9ec;
+}
+
+.btn-qty:disabled {
+  cursor: not-allowed;
+  color: #d0a2a8;
+  background: #fbf3f4;
+}
+
+.qty-value {
+  min-width: 54px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #222a35;
+}
+
+.btn-add-cart {
+  height: 46px;
+  padding: 0 26px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d22839, #971624);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(151, 22, 36, 0.18);
+}
+
+.btn-add-cart:disabled {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #efb4bb, #d8929b);
+  box-shadow: none;
+}
+
 .attr-list {
   margin-top: 14px;
   display: grid;
@@ -768,6 +1081,32 @@ watch(
   font-size: 13px;
   color: #4f5664;
   background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.chip.selected {
+  border-color: #d66f7c;
+  background: #fff1f3;
+  color: #a11e2d;
+  box-shadow: inset 0 0 0 1px rgba(193, 32, 47, 0.14);
+}
+
+.chip.disabled {
+  cursor: not-allowed;
+  color: #9aa3b2;
+  background: #f7f8fb;
+  border-color: #eceff5;
+  opacity: 0.72;
+}
+
+.chip:not(:disabled):hover {
+  border-color: #dca3aa;
+  background: #fff7f8;
 }
 
 .flash-panel {
@@ -940,8 +1279,17 @@ watch(
     margin-left: 0;
   }
 
+  .purchase-controls,
   .attr-row {
     grid-template-columns: 1fr;
+  }
+
+  .purchase-controls {
+    display: grid;
+  }
+
+  .btn-add-cart {
+    width: 100%;
   }
 
   .session-tabs {

@@ -220,3 +220,9 @@ export function getCategoryTree() {
 export function getSkuItem(skuId: string) {
   return request.get<RObject<SkuItemVO>, RObject<SkuItemVO>>(`${PRODUCT_API}/public/product/item/${skuId}`)
 }
+
+export function getSpuSkuAttrsMapping(spuId: string) {
+  return request.get<RObject<Record<string, string>>, RObject<Record<string, string>>>(
+    `${PRODUCT_API}/public/product/spu/${spuId}/sku-attrs-mapping`,
+  )
+}

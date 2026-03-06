@@ -17,6 +17,72 @@
         }
     ],
     "paths": {
+        "/public/flash-sale/sku/{skuId}/sessions": {
+            "get": {
+                "tags": [
+                    "秒杀活动接口"
+                ],
+                "description": "获取某个SKU参与的秒杀活动场次列表",
+                "operationId": "getFlashSaleSessionsBySkuId",
+                "parameters": [
+                    {
+                        "name": "skuId",
+                        "in": "path",
+                        "description": "SKU主键",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RListFlashSaleSession"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/public/flash-sale/sku/{skuId}/in-flash-sale": {
+            "get": {
+                "tags": [
+                    "秒杀活动接口"
+                ],
+                "description": "检查某个SKU是否参与了秒杀活动",
+                "operationId": "isSkuInFlashSale",
+                "parameters": [
+                    {
+                        "name": "skuId",
+                        "in": "path",
+                        "description": "SKU主键",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RBoolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/public/flash-sale/sessions": {
             "get": {
                 "tags": [
@@ -81,10 +147,136 @@
                     }
                 }
             }
+        },
+        "/public/flash-sale/session/{sessionId}": {
+            "get": {
+                "tags": [
+                    "秒杀活动接口"
+                ],
+                "description": "获取秒杀活动场次详情",
+                "operationId": "getFlashSaleSessionById",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "description": "场次主键",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "withProducts",
+                        "in": "query",
+                        "description": "是否包含商品信息，默认为false",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RSessionVO"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
+            "FlashSaleSession": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "id",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "场次名称"
+                    },
+                    "startTime": {
+                        "type": "string",
+                        "description": "每日开始时间",
+                        "format": "date-time"
+                    },
+                    "endTime": {
+                        "type": "string",
+                        "description": "每日结束时间",
+                        "format": "date-time"
+                    },
+                    "createTime": {
+                        "type": "string",
+                        "description": "创建时间",
+                        "format": "date-time"
+                    }
+                },
+                "description": "秒杀活动场次"
+            },
+            "RListFlashSaleSession": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "array",
+                        "description": "数据",
+                        "items": {
+                            "$ref": "#/components/schemas/FlashSaleSession"
+                        }
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
+            "RBoolean": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "boolean",
+                        "description": "数据"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
             "RListSessionVO": {
                 "type": "object",
                 "properties": {
@@ -224,6 +416,30 @@
                     }
                 },
                 "description": "秒杀活动场次信息的VO对象"
+            },
+            "RSessionVO": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SessionVO"
+                    }
+                },
+                "description": "统一http请求返回格式"
             }
         }
     }

@@ -642,7 +642,7 @@ const goPage = (page: number) => {
 }
 
 const goProductDetail = (product: Product) => {
-  window.location.href = `/product/${product.skuId}`
+  void router.push({ name: 'productDetail', params: { skuId: product.skuId } })
 }
 
 watch(

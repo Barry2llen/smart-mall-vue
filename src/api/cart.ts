@@ -1,5 +1,10 @@
 import request from '@/utils/request'
 
+export interface AddCartItemDTO {
+  skuId: string
+  count: number
+}
+
 export interface CartItemVO {
   skuId: string
   spuId: string
@@ -25,6 +30,10 @@ export interface RCart {
   code: string
   msg: string
   data: Cart
+}
+
+export function addCartItem(data: AddCartItemDTO) {
+  return request.post('/cart/public', data)
 }
 
 export function getCart() {

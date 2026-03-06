@@ -40,6 +40,14 @@ export interface SessionVO {
   skuInfos?: SessionRelatedSkuInfoVO[]
 }
 
+export interface FlashSaleSession {
+  id?: string
+  name?: string
+  startTime?: string
+  endTime?: string
+  createTime?: string
+}
+
 const FLASH_SALE_API = '/flash-sale'
 
 const normalizeQuery = (params: FlashSaleSessionQuery = {}) => {
@@ -64,6 +72,29 @@ export function getFlashSaleSessions(params: FlashSaleSessionQuery = {}) {
     `${FLASH_SALE_API}/public/flash-sale/sessions`,
     {
       params: normalizeQuery(params),
+    },
+  )
+}
+
+export function isSkuInFlashSale(skuId: string) {
+  return request.get<RObject<boolean>, RObject<boolean>>(
+    `${FLASH_SALE_API}/public/flash-sale/sku/${skuId}/in-flash-sale`,
+  )
+}
+
+export function getFlashSaleSessionsBySkuId(skuId: string) {
+  return request.get<RObject<FlashSaleSession[]>, RObject<FlashSaleSession[]>>(
+    `${FLASH_SALE_API}/public/flash-sale/sku/${skuId}/sessions`,
+  )
+}
+
+export function getFlashSaleSessionById(sessionId: string, withProducts = false) {
+  return request.get<RObject<SessionVO>, RObject<SessionVO>>(
+    `${FLASH_SALE_API}/public/flash-sale/session/${sessionId}`,
+    {
+      params: {
+        withProducts,
+      },
     },
   )
 }

@@ -242,7 +242,7 @@ const goCategorySearch = (category: CategoryVO) => {
 
 const goProductDetail = (skuId?: string) => {
   if (authLoading.value || !skuId) return
-  window.location.href = `/product/${skuId}`
+  void router.push({ name: 'productDetail', params: { skuId } })
 }
 
 const selectFlashSession = (session: SessionVO) => {

@@ -81,6 +81,57 @@ export interface CategoryVO {
   children?: CategoryVO[]
 }
 
+export interface SkuInfoVO {
+  skuId?: string
+  spuId?: string
+  catalogId?: string
+  skuName?: string
+  skuDesc?: string
+  skuDefaultImg?: string
+  skuTitle?: string
+  skuSubtitle?: string
+  price?: number
+  saleCount?: number
+}
+
+export interface SkuImages {
+  id?: string
+  skuId?: string
+  imgUrl?: string
+  imgSort?: number
+  defaultImg?: number
+}
+
+export interface SkuItemSaleAttrVO {
+  attrId?: string
+  attrName?: string
+  attrValues?: string
+}
+
+export interface SpuInfoDesc {
+  spuId?: string
+  decript?: string
+}
+
+export interface SpuBaseAttrVO {
+  attrId?: string
+  attrName?: string
+  attrValue?: string
+}
+
+export interface SpuItemAttrGroupVO {
+  groupName?: string
+  attrs?: SpuBaseAttrVO[]
+}
+
+export interface SkuItemVO {
+  skuInfo?: SkuInfoVO
+  images?: SkuImages[]
+  saleAttr?: SkuItemSaleAttrVO[]
+  desp?: SpuInfoDesc
+  groupAttrs?: SpuItemAttrGroupVO[]
+}
+
 const SEARCH_API = '/search'
 const PRODUCT_API = '/product'
 
@@ -164,4 +215,8 @@ export function getCategoryTree() {
   return request.get<RObject<CategoryVO[]>, RObject<CategoryVO[]>>(
     `${PRODUCT_API}/public/product/category/list`,
   )
+}
+
+export function getSkuItem(skuId: string) {
+  return request.get<RObject<SkuItemVO>, RObject<SkuItemVO>>(`${PRODUCT_API}/public/product/item/${skuId}`)
 }

@@ -17,6 +17,134 @@
         }
     ],
     "paths": {
+        "/public/flash-sale/kill": {
+            "post": {
+                "tags": [
+                    "秒杀活动接口"
+                ],
+                "description": "执行秒杀请求",
+                "operationId": "kill",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "skuId",
+                        "in": "query",
+                        "description": "商品sku id",
+                        "required": true
+                    },
+                    {
+                        "name": "randomCode",
+                        "in": "query",
+                        "description": "秒杀随机码",
+                        "required": true
+                    },
+                    {
+                        "name": "sessionId",
+                        "in": "query",
+                        "description": "秒杀场次id",
+                        "required": true
+                    },
+                    {
+                        "name": "num",
+                        "in": "query",
+                        "description": "购买数量",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Kill"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RObject"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/public/flash-sale": {
+            "get": {
+                "tags": [
+                    "秒杀活动接口"
+                ],
+                "description": "确认秒杀订单信息",
+                "operationId": "confirmOrder",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "sessionId",
+                        "in": "query",
+                        "description": "场次主键",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "skuId",
+                        "in": "query",
+                        "description": "商品主键",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "num",
+                        "in": "query",
+                        "description": "购买数量",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ROrderConfirm"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/public/flash-sale/sku/{skuId}/sessions": {
             "get": {
                 "tags": [
@@ -58,6 +186,15 @@
                 "description": "检查某个SKU是否参与了秒杀活动",
                 "operationId": "isSkuInFlashSale",
                 "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
                     {
                         "name": "skuId",
                         "in": "path",
@@ -194,6 +331,222 @@
     },
     "components": {
         "schemas": {
+            "Kill": {
+                "required": [
+                    "num",
+                    "randomCode",
+                    "sessionId",
+                    "skuId"
+                ],
+                "type": "object",
+                "properties": {
+                    "skuId": {
+                        "type": "integer",
+                        "description": "商品ID",
+                        "format": "int64"
+                    },
+                    "sessionId": {
+                        "type": "integer",
+                        "description": "秒杀活动场次ID",
+                        "format": "int64"
+                    },
+                    "randomCode": {
+                        "type": "string",
+                        "description": "随机码"
+                    },
+                    "num": {
+                        "type": "integer",
+                        "description": "购买数量",
+                        "format": "int32"
+                    },
+                    "addressId": {
+                        "type": "integer",
+                        "description": "地址ID，秒杀成功后用于确认订单时的地址选择，非必填，如果不提供则默认使用用户的默认地址",
+                        "format": "int64"
+                    },
+                    "note": {
+                        "type": "string",
+                        "description": "备注信息"
+                    }
+                },
+                "description": "秒杀请求DTO"
+            },
+            "RObject": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "数据"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
+            "MemberReceiveAddress": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "id",
+                        "format": "int64"
+                    },
+                    "memberId": {
+                        "type": "integer",
+                        "description": "member_id",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "收货人姓名"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "电话"
+                    },
+                    "postCode": {
+                        "type": "string",
+                        "description": "邮政编码"
+                    },
+                    "province": {
+                        "type": "string",
+                        "description": "省份/直辖市"
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "城市"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "区"
+                    },
+                    "detailAddress": {
+                        "type": "string",
+                        "description": "详细地址(街道)"
+                    },
+                    "areacode": {
+                        "type": "string",
+                        "description": "省市区代码"
+                    },
+                    "defaultStatus": {
+                        "type": "integer",
+                        "description": "是否默认",
+                        "format": "int32"
+                    }
+                },
+                "description": "会员收货地址"
+            },
+            "OrderConfirm": {
+                "type": "object",
+                "properties": {
+                    "addresses": {
+                        "type": "array",
+                        "description": "收货地址列表",
+                        "items": {
+                            "$ref": "#/components/schemas/MemberReceiveAddress"
+                        }
+                    },
+                    "item": {
+                        "$ref": "#/components/schemas/OrderItem"
+                    },
+                    "points": {
+                        "type": "integer",
+                        "description": "获得积分",
+                        "format": "int32"
+                    },
+                    "total": {
+                        "type": "number",
+                        "description": "订单总金额"
+                    },
+                    "payTotal": {
+                        "type": "number",
+                        "description": "应付总金额"
+                    }
+                },
+                "description": "秒杀订单确认信息"
+            },
+            "OrderItem": {
+                "type": "object",
+                "properties": {
+                    "skuId": {
+                        "type": "integer",
+                        "description": "skuId",
+                        "format": "int64"
+                    },
+                    "spuId": {
+                        "type": "integer",
+                        "description": "spuId",
+                        "format": "int64"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "标题"
+                    },
+                    "image": {
+                        "type": "string",
+                        "description": "图片"
+                    },
+                    "skuAttr": {
+                        "type": "array",
+                        "description": "属性",
+                        "items": {
+                            "type": "string",
+                            "description": "属性"
+                        }
+                    },
+                    "price": {
+                        "type": "number",
+                        "description": "价格"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "数量",
+                        "format": "int32"
+                    },
+                    "totalPrice": {
+                        "type": "number",
+                        "description": "总价"
+                    }
+                },
+                "description": "秒杀订单项"
+            },
+            "ROrderConfirm": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "状态码类型",
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "500",
+                            "403"
+                        ]
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "消息"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/OrderConfirm"
+                    }
+                },
+                "description": "统一http请求返回格式"
+            },
             "FlashSaleSession": {
                 "type": "object",
                 "properties": {
@@ -327,6 +680,10 @@
                         "type": "integer",
                         "description": "商品sku id",
                         "format": "int64"
+                    },
+                    "randomCode": {
+                        "type": "string",
+                        "description": "秒杀随机码，唯一且不变，用于秒杀请求验证"
                     },
                     "seckillPrice": {
                         "type": "number",

@@ -25,10 +25,32 @@ export interface ProductAttrValue {
 }
 
 export interface Product {
-  skuId: string
+  spuId: string
+  defaultSkuId?: string
+  minPrice: number
+  maxPrice?: number
+  defaultImage?: string
+  spuName: string
+  saleCount?: number
+  hasStock?: boolean | number
+  hotScore?: number
+  brandId?: string
+  catalogId?: string
+  brandName?: string
+  brandImg?: string
+  catalogName?: string
+}
+
+interface LegacyProduct {
+  skuId?: string
   spuId?: string
-  skuTitle: string
-  skuPrice: number
+  defaultSkuId?: string
+  spuName?: string
+  skuTitle?: string
+  minPrice?: number
+  maxPrice?: number
+  skuPrice?: number
+  defaultImage?: string
   skuImg?: string
   saleCount?: number
   hasStock?: boolean | number
@@ -40,6 +62,8 @@ export interface Product {
   catalogName?: string
   attrs?: ProductAttrValue[]
 }
+
+type RawSearchProduct = Partial<Product> & LegacyProduct
 
 export interface RelatedBrand {
   brandId: string
@@ -66,6 +90,50 @@ export interface ProductSearchResult {
   brands: RelatedBrand[]
   attrs: RelatedAttr[]
   catalogs: RelatedCatalog[]
+}
+
+const normalizeProduct = (item: RawSearchProduct): Product => {
+  const spuId = String(item.spuId || item.skuId || '')
+  const defaultSkuId = item.defaultSkuId || item.skuId
+  const minPrice = Number(item.minPrice ?? item.skuPrice ?? 0)
+  const maxPrice = Number(item.maxPrice ?? item.skuPrice ?? minPrice)
+
+  return {
+    spuId,
+    defaultSkuId: defaultSkuId ? String(defaultSkuId) : undefined,
+    spuName: item.spuName || item.skuTitle || '',
+    defaultImage: item.defaultImage || item.skuImg,
+    minPrice,
+    maxPrice,
+    saleCount: item.saleCount,
+    hasStock: item.hasStock,
+    hotScore: item.hotScore,
+    brandId: item.brandId,
+    catalogId: item.catalogId,
+    brandName: item.brandName,
+    brandImg: item.brandImg,
+    catalogName: item.catalogName,
+  }
+}
+
+const normalizeSearchResult = (result?: RObject<ProductSearchResult>): RObject<ProductSearchResult> => {
+  if (!result?.data) {
+    return result || {}
+  }
+
+  return {
+    ...result,
+    data: {
+      ...result.data,
+      products: Array.isArray(result.data.products) ? result.data.products.map((item) => normalizeProduct(item)) : [],
+      total: Number(result.data.total || 0),
+      pages: Number(result.data.pages || 0),
+      pageNum: Number(result.data.pageNum || 0),
+      brands: Array.isArray(result.data.brands) ? result.data.brands : [],
+      attrs: Array.isArray(result.data.attrs) ? result.data.attrs : [],
+      catalogs: Array.isArray(result.data.catalogs) ? result.data.catalogs : [],
+    },
+  }
 }
 
 export interface CategoryVO {
@@ -204,11 +272,12 @@ export const buildProductSearchPayload = (params: ProductSearchParam = {}): Prod
   return payload
 }
 
-export function searchProducts(params: ProductSearchParam = {}) {
-  return request.post<RObject<ProductSearchResult>, RObject<ProductSearchResult>>(
+export async function searchProducts(params: ProductSearchParam = {}) {
+  const result = await request.post<RObject<ProductSearchResult>, RObject<ProductSearchResult>>(
     `${SEARCH_API}/public/product/search`,
     buildProductSearchPayload(params),
   )
+  return normalizeSearchResult(result)
 }
 
 export function getCategoryTree() {

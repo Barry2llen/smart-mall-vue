@@ -10,6 +10,7 @@ import {
   type RelatedBrand,
   type RelatedCatalog,
 } from '@/api/product'
+import { formatSearchProductPrice } from '@/utils/product'
 
 defineOptions({ name: 'SearchResultPage' })
 
@@ -374,7 +375,6 @@ const isProductInStock = (product: Product) => {
   return true
 }
 
-const formatPrice = (price?: number) => `¥${Number(price || 0).toFixed(2)}`
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -642,7 +642,11 @@ const goPage = (page: number) => {
 }
 
 const goProductDetail = (product: Product) => {
-  void router.push({ name: 'productDetail', params: { skuId: product.skuId } })
+  if (!product.defaultSkuId) {
+    errorMessage.value = '商品规格信息缺失，暂时无法打开详情'
+    return
+  }
+  void router.push({ name: 'productDetail', params: { skuId: product.defaultSkuId } })
 }
 
 watch(
@@ -872,16 +876,16 @@ onBeforeUnmount(() => {
           <div class="product-grid" :class="{ 'is-loading': loadingList }">
             <article
               v-for="product in searchResult.products"
-              :key="product.skuId"
+              :key="product.spuId"
               class="product-card"
               :class="{ 'is-out': !isProductInStock(product) }"
               @click="goProductDetail(product)"
             >
               <div class="product-image-wrap">
-                <img :src="product.skuImg || '/favicon.ico'" :alt="product.skuTitle" />
+                <img :src="product.defaultImage || '/favicon.ico'" :alt="product.spuName" />
               </div>
 
-              <h3 class="product-title" v-html="highlightTitle(product.skuTitle)"></h3>
+              <h3 class="product-title" v-html="highlightTitle(product.spuName)"></h3>
 
               <p class="product-brand">
                 {{ product.brandName || '优选品牌' }}
@@ -889,7 +893,7 @@ onBeforeUnmount(() => {
               </p>
 
               <div class="product-meta">
-                <span class="price">{{ formatPrice(product.skuPrice) }}</span>
+                <span class="price">{{ formatSearchProductPrice(product) }}</span>
                 <span class="sales">销量 {{ product.saleCount || 0 }}</span>
               </div>
 
@@ -1527,3 +1531,6 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+
+
+

@@ -10,6 +10,7 @@ import {
   type Product,
   type ProductSearchParam,
 } from '@/api/product'
+import { formatPrice, formatSearchProductPrice } from '@/utils/product'
 
 defineOptions({ name: 'HomePage' })
 
@@ -77,7 +78,7 @@ const activeFlashSession = computed(
 )
 const activeFlashProducts = computed(() => activeFlashSession.value?.skuInfos || [])
 
-const formatPrice = (price?: number) => `¥${Number(price || 0).toFixed(2)}`
+
 const formatSessionTime = (value?: string) => {
   const t = value ? new Date(value).getTime() : Number.NaN
   if (Number.isNaN(t)) return '--:--'
@@ -417,10 +418,10 @@ onMounted(async () => {
     <section class="container card">
       <header><h3>推荐商品</h3></header>
       <div class="grid" v-if="!recommendLoading && recommendProducts.length">
-        <article v-for="item in recommendProducts" :key="item.skuId" @click="goProductDetail(item.skuId)">
-          <img :src="item.skuImg || '/favicon.ico'" :alt="item.skuTitle" />
-          <h4>{{ item.skuTitle }}</h4>
-          <p class="price">{{ formatPrice(item.skuPrice) }}</p>
+        <article v-for="item in recommendProducts" :key="item.spuId" @click="goProductDetail(item.defaultSkuId)">
+          <img :src="item.defaultImage || '/favicon.ico'" :alt="item.spuName" />
+          <h4>{{ item.spuName }}</h4>
+          <p class="price">{{ formatSearchProductPrice(item) }}</p>
         </article>
       </div>
       <div class="empty" v-else>加载中或暂无数据</div>
@@ -429,10 +430,10 @@ onMounted(async () => {
     <section class="container card">
       <header><h3>热卖商品</h3></header>
       <div class="grid" v-if="!hotLoading && hotProducts.length">
-        <article v-for="item in hotProducts" :key="item.skuId" @click="goProductDetail(item.skuId)">
-          <img :src="item.skuImg || '/favicon.ico'" :alt="item.skuTitle" />
-          <h4>{{ item.skuTitle }}</h4>
-          <p class="price">{{ formatPrice(item.skuPrice) }}</p>
+        <article v-for="item in hotProducts" :key="item.spuId" @click="goProductDetail(item.defaultSkuId)">
+          <img :src="item.defaultImage || '/favicon.ico'" :alt="item.spuName" />
+          <h4>{{ item.spuName }}</h4>
+          <p class="price">{{ formatSearchProductPrice(item) }}</p>
         </article>
       </div>
       <div class="empty" v-else>加载中或暂无数据</div>
@@ -441,10 +442,10 @@ onMounted(async () => {
     <section class="container card">
       <header><h3>猜你喜欢</h3></header>
       <div class="grid" v-if="!guessLoading && guessProducts.length">
-        <article v-for="item in guessProducts" :key="item.skuId" @click="goProductDetail(item.skuId)">
-          <img :src="item.skuImg || '/favicon.ico'" :alt="item.skuTitle" />
-          <h4>{{ item.skuTitle }}</h4>
-          <p class="price">{{ formatPrice(item.skuPrice) }}</p>
+        <article v-for="item in guessProducts" :key="item.spuId" @click="goProductDetail(item.defaultSkuId)">
+          <img :src="item.defaultImage || '/favicon.ico'" :alt="item.spuName" />
+          <h4>{{ item.spuName }}</h4>
+          <p class="price">{{ formatSearchProductPrice(item) }}</p>
         </article>
       </div>
       <div class="empty" v-else>加载中或暂无数据</div>
@@ -1114,3 +1115,7 @@ onMounted(async () => {
   }
 }
 </style>
+
+
+
+

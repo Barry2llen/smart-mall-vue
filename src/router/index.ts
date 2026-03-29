@@ -39,6 +39,11 @@ const router = createRouter({
       component: () => import('../views/order/ConfirmOrder.vue'),
     },
     {
+      path: '/flash-sale/confirm',
+      name: 'flashSaleConfirm',
+      component: () => import('../views/order/FlashSaleConfirm.vue'),
+    },
+    {
       path: '/order/list',
       name: 'orderList',
       component: () => import('../views/order/OrderList.vue'),

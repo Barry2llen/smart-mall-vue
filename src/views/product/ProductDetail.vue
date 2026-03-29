@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { addCartItem } from '@/api/cart'
 import {
@@ -46,13 +46,18 @@ const inFlashSale = ref(false)
 const flashLoading = ref(false)
 const flashDetailLoading = ref(false)
 const flashError = ref('')
+const flashActionMessage = ref('')
 const flashSessions = ref<FlashSaleSession[]>([])
 const activeSessionId = ref('')
 const activeSessionDetail = ref<SessionVO | null>(null)
+const flashNavigating = ref(false)
+const flashNow = ref(Date.now())
 
 let loadSerial = 0
 let flashDetailSerial = 0
 let preservedCountOnSwitch: number | null = null
+let flashTimer: number | null = null
+let autoRefreshedFlashKey = ''
 
 const skuId = computed(() => {
   const value = route.params.skuId
@@ -142,6 +147,21 @@ const activeFlashSku = computed<SessionRelatedSkuInfoVO | undefined>(() => {
   return list.find((item) => String(item.skuId || '') === skuId.value)
 })
 
+const activeFlashLimit = computed(() => {
+  const value = Number(activeFlashSku.value?.seckillLimit || 0)
+  return value > 0 ? value : Number.POSITIVE_INFINITY
+})
+
+const canIncreaseCount = computed(() => {
+  if (submittingCart.value) {
+    return false
+  }
+  if (!Number.isFinite(activeFlashLimit.value)) {
+    return true
+  }
+  return selectedCount.value < activeFlashLimit.value
+})
+
 const flashDiscount = computed(() => {
   const origin = Number(skuInfo.value?.price || 0)
   const flashPrice = Number(activeFlashSku.value?.seckillPrice || 0)
@@ -150,6 +170,67 @@ const flashDiscount = computed(() => {
 })
 
 const hasFlashData = computed(() => Boolean(activeFlashSku.value && activeSession.value))
+
+const flashStatus = computed(() => {
+  const session = activeSession.value
+  if (!session) return 'unknown'
+  const start = session.startTime ? new Date(session.startTime).getTime() : Number.NaN
+  const end = session.endTime ? new Date(session.endTime).getTime() : Number.NaN
+  if (Number.isNaN(start) || Number.isNaN(end)) return 'unknown'
+
+  if (flashNow.value < start) return 'upcoming'
+  if (flashNow.value > end) return 'ended'
+  return 'running'
+})
+
+const flashCountdownText = computed(() => {
+  const session = activeSession.value
+  if (!session?.startTime) {
+    return ''
+  }
+  const start = new Date(session.startTime).getTime()
+  if (Number.isNaN(start)) {
+    return ''
+  }
+  const remaining = Math.max(0, Math.ceil((start - flashNow.value) / 1000))
+  const hours = String(Math.floor(remaining / 3600)).padStart(2, '0')
+  const minutes = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0')
+  const seconds = String(remaining % 60).padStart(2, '0')
+  return `${hours}:${minutes}:${seconds}`
+})
+
+const flashActionState = computed(() => {
+  if (!inFlashSale.value) return 'hidden'
+  if (flashLoading.value || flashDetailLoading.value) return 'loading'
+  if (flashError.value && !hasFlashData.value) return 'error'
+  if (!hasFlashData.value) return 'unavailable'
+  if (flashStatus.value === 'upcoming') return 'upcoming'
+  if (flashStatus.value === 'ended') return 'ended'
+  if (!activeFlashSku.value?.randomCode) return 'refreshing'
+  if (flashNavigating.value) return 'submitting'
+  return 'ready'
+})
+
+const flashActionText = computed(() => {
+  switch (flashActionState.value) {
+    case 'loading':
+      return '秒杀信息加载中...'
+    case 'upcoming':
+      return flashCountdownText.value ? `距开始 ${flashCountdownText.value}` : '即将开始'
+    case 'ended':
+      return '活动已结束'
+    case 'refreshing':
+      return '正在刷新抢购资格...'
+    case 'submitting':
+      return '跳转中...'
+    case 'error':
+      return '秒杀信息加载失败'
+    case 'unavailable':
+      return '暂无秒杀资格'
+    default:
+      return '立即抢购'
+  }
+})
 
 const formatPrice = (value?: number) => `¥${Number(value || 0).toFixed(2)}`
 
@@ -176,6 +257,27 @@ const getSessionStatus = (session?: FlashSaleSession | SessionVO) => {
   if (now < start) return '即将开始'
   if (now > end) return '已结束'
   return '进行中'
+}
+
+const syncFlashNow = () => {
+  flashNow.value = Date.now()
+}
+
+const resetFlashTimer = () => {
+  if (flashTimer) {
+    clearInterval(flashTimer)
+    flashTimer = null
+  }
+}
+
+const setupFlashTimer = () => {
+  resetFlashTimer()
+  if (!activeSession.value || !['upcoming', 'running'].includes(flashStatus.value)) {
+    return
+  }
+  flashTimer = window.setInterval(() => {
+    syncFlashNow()
+  }, 1000)
 }
 
 const chooseBestSession = (sessions: FlashSaleSession[]) => {
@@ -307,9 +409,14 @@ const resetFlashState = () => {
   flashLoading.value = false
   flashDetailLoading.value = false
   flashError.value = ''
+  flashActionMessage.value = ''
   flashSessions.value = []
   activeSessionId.value = ''
   activeSessionDetail.value = null
+  flashNavigating.value = false
+  autoRefreshedFlashKey = ''
+  syncFlashNow()
+  resetFlashTimer()
 }
 
 const fetchSessionDetail = async (sessionId: string, serialGuard?: number, fromSwitcher = false) => {
@@ -353,6 +460,7 @@ const loadFlashData = async (currentSkuId: string, serialGuard: number) => {
   flashSessions.value = []
   activeSessionId.value = ''
   activeSessionDetail.value = null
+  flashActionMessage.value = ''
 
   try {
     const response = await getFlashSaleSessionsBySkuId(currentSkuId)
@@ -496,6 +604,7 @@ const selectFlashSession = (session: FlashSaleSession) => {
   if (!targetId || targetId === activeSessionId.value) {
     return
   }
+  flashActionMessage.value = ''
   activeSessionId.value = targetId
   void fetchSessionDetail(targetId, undefined, true)
 }
@@ -504,7 +613,7 @@ const changeCount = (delta: number) => {
   if (submittingCart.value) {
     return
   }
-  selectedCount.value = Math.max(1, selectedCount.value + delta)
+  selectedCount.value = Math.max(1, Math.min(selectedCount.value + delta, activeFlashLimit.value))
 }
 
 const handleAddToCart = async () => {
@@ -539,6 +648,36 @@ const handleAddToCart = async () => {
   }
 }
 
+const handleFlashPurchase = async () => {
+  if (
+    flashNavigating.value ||
+    flashActionState.value !== 'ready' ||
+    !activeSessionId.value ||
+    !skuId.value ||
+    !hasFlashData.value
+  ) {
+    return
+  }
+
+  flashNavigating.value = true
+  flashActionMessage.value = ''
+
+  try {
+    await router.push({
+      name: 'flashSaleConfirm',
+      query: {
+        sessionId: activeSessionId.value,
+        skuId: skuId.value,
+        num: String(selectedCount.value),
+      },
+    })
+  } catch {
+    flashActionMessage.value = '跳转秒杀确认页失败，请稍后重试'
+  } finally {
+    flashNavigating.value = false
+  }
+}
+
 const goBack = () => {
   if (window.history.length > 1) {
     router.back()
@@ -568,6 +707,41 @@ watch(
   },
   { immediate: true },
 )
+
+watch(
+  () => activeFlashSku.value?.seckillLimit,
+  () => {
+    if (!Number.isFinite(activeFlashLimit.value)) {
+      return
+    }
+    selectedCount.value = Math.max(1, Math.min(selectedCount.value, activeFlashLimit.value))
+  },
+  { immediate: true },
+)
+
+watch(
+  [flashStatus, () => activeSession.value?.id, () => activeSession.value?.startTime],
+  () => {
+    syncFlashNow()
+    setupFlashTimer()
+    const refreshKey = `${activeSessionId.value}-${skuId.value}-${activeSession.value?.startTime || ''}`
+    if (
+      flashStatus.value === 'running' &&
+      hasFlashData.value &&
+      !activeFlashSku.value?.randomCode &&
+      activeSessionId.value &&
+      refreshKey !== autoRefreshedFlashKey
+    ) {
+      autoRefreshedFlashKey = refreshKey
+      void fetchSessionDetail(activeSessionId.value, undefined, true)
+    }
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  resetFlashTimer()
+})
 </script>
 
 <template>
@@ -647,12 +821,25 @@ watch(
                   -
                 </button>
                 <span class="qty-value">{{ selectedCount }}</span>
-                <button type="button" class="btn-qty" :disabled="submittingCart" @click="changeCount(1)">+</button>
+                <button type="button" class="btn-qty" :disabled="!canIncreaseCount" @click="changeCount(1)">+</button>
               </div>
               <button class="btn-add-cart" type="button" :disabled="submittingCart" @click="handleAddToCart">
                 {{ submittingCart ? '加入中...' : '加入购物车' }}
               </button>
+              <button
+                v-if="inFlashSale"
+                class="btn-flash"
+                type="button"
+                :disabled="flashActionState !== 'ready'"
+                @click="handleFlashPurchase"
+              >
+                {{ flashActionText }}
+              </button>
             </div>
+            <p v-if="Number.isFinite(activeFlashLimit)" class="purchase-tip">
+              当前秒杀限购 {{ activeFlashLimit }} 件
+            </p>
+            <p v-if="flashActionMessage" class="purchase-tip error">{{ flashActionMessage }}</p>
           </div>
 
           <div class="attr-list" v-if="saleAttrs.length">
@@ -713,6 +900,9 @@ watch(
                 <p>
                   场次时间：{{ formatDateTime(activeSession?.startTime) }} -
                   {{ formatDateTime(activeSession?.endTime) }}
+                </p>
+                <p v-if="flashStatus === 'upcoming' && flashCountdownText">
+                  距离开抢：<strong>{{ flashCountdownText }}</strong>
                 </p>
               </div>
               <p v-else class="flash-empty">当前场次暂无该商品的秒杀明细</p>
@@ -1047,6 +1237,35 @@ watch(
   cursor: not-allowed;
   background: linear-gradient(135deg, #efb4bb, #d8929b);
   box-shadow: none;
+}
+
+.btn-flash {
+  height: 46px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff8a00, #d9480f);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(217, 72, 15, 0.18);
+}
+
+.btn-flash:disabled {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #f2c7a3, #dca77b);
+  box-shadow: none;
+}
+
+.purchase-tip {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #677182;
+}
+
+.purchase-tip.error {
+  color: #b12637;
 }
 
 .attr-list {

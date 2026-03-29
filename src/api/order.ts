@@ -170,3 +170,11 @@ export function getOrderBySn(sn: string) {
     })
     .then((res) => res.data)
 }
+
+export function redirectToOrderPay(orderSn: string) {
+  const accessToken = localStorage.getItem('access_token')
+  if (accessToken) {
+    document.cookie = `access_token=${encodeURIComponent(accessToken)}; path=/`
+  }
+  window.location.href = `/api/order/public/pay/${orderSn}`
+}

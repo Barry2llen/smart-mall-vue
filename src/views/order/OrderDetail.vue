@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getOrderBySn, type OrderListSkuItem, type OrderWithItems } from '@/api/order'
+import {
+  getOrderBySn,
+  redirectToOrderPay,
+  type OrderListSkuItem,
+  type OrderWithItems,
+} from '@/api/order'
 
 defineOptions({ name: 'OrderDetailPage' })
 
@@ -41,19 +46,31 @@ const statusMap: Record<string, { label: string; class: string }> = {
   '5': { label: '无效订单', class: 'status-invalid' },
 }
 
-const getStatusInfo = (status?: string) =>
-  statusMap[status || ''] || { label: '未知状态', class: 'status-unknown' }
+const normalizeStatus = (status?: string | number | null) => {
+  if (status === undefined || status === null || status === '') {
+    return ''
+  }
+  return String(status)
+}
 
-const payTypeLabel = (payType?: string) =>
-  payType === '1' ? '货到付款' : payType === '0' ? '在线支付' : '—'
+const getStatusInfo = (status?: string | number | null) =>
+  statusMap[normalizeStatus(status)] || { label: '未知状态', class: 'status-unknown' }
 
-const sourceTypeLabel = (sourceType?: string) =>
-  sourceType === '0' ? 'PC 订单' : sourceType === '1' ? 'App 订单' : '—'
+const payTypeLabel = (payType?: string | number | null) => {
+  const normalized = normalizeStatus(payType)
+  return normalized === '1' ? '货到付款' : normalized === '0' ? '在线支付' : '—'
+}
 
-const billTypeLabel = (billType?: string) => {
-  if (billType === '0') return '不开发票'
-  if (billType === '1') return '电子发票'
-  if (billType === '2') return '纸质发票'
+const sourceTypeLabel = (sourceType?: string | number | null) => {
+  const normalized = normalizeStatus(sourceType)
+  return normalized === '0' ? 'PC 订单' : normalized === '1' ? 'App 订单' : '—'
+}
+
+const billTypeLabel = (billType?: string | number | null) => {
+  const normalized = normalizeStatus(billType)
+  if (normalized === '0') return '不开发票'
+  if (normalized === '1') return '电子发票'
+  if (normalized === '2') return '纸质发票'
   return '—'
 }
 
@@ -75,6 +92,13 @@ const goBack = () => {
   } else {
     void router.push({ name: 'orderList' })
   }
+}
+
+const goPay = () => {
+  if (!order.value?.orderSn) {
+    return
+  }
+  redirectToOrderPay(order.value.orderSn)
 }
 
 const order = computed(() => orderData.value?.order)
@@ -179,7 +203,7 @@ onMounted(() => {
           <div class="status-banner">
             <span class="status-icon-wrap">
               <svg
-                v-if="order?.status === '0'"
+                v-if="normalizeStatus(order?.status) === '0'"
                 viewBox="0 0 24 24"
                 width="28"
                 height="28"
@@ -193,7 +217,7 @@ onMounted(() => {
                 <line x1="1" y1="10" x2="23" y2="10"></line>
               </svg>
               <svg
-                v-else-if="order?.status === '1'"
+                v-else-if="normalizeStatus(order?.status) === '1'"
                 viewBox="0 0 24 24"
                 width="28"
                 height="28"
@@ -207,7 +231,7 @@ onMounted(() => {
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
               <svg
-                v-else-if="order?.status === '2'"
+                v-else-if="normalizeStatus(order?.status) === '2'"
                 viewBox="0 0 24 24"
                 width="28"
                 height="28"
@@ -223,7 +247,7 @@ onMounted(() => {
                 <circle cx="18.5" cy="18.5" r="2.5"></circle>
               </svg>
               <svg
-                v-else-if="order?.status === '3'"
+                v-else-if="normalizeStatus(order?.status) === '3'"
                 viewBox="0 0 24 24"
                 width="28"
                 height="28"
@@ -608,7 +632,14 @@ onMounted(() => {
 
         <!-- 底部操作 -->
         <div class="bottom-actions">
-          <button v-if="order?.status === '0'" class="btn btn-primary" type="button">去支付</button>
+          <button
+            v-if="normalizeStatus(order?.status) === '0'"
+            class="btn btn-primary"
+            type="button"
+            @click="goPay"
+          >
+            立即支付
+          </button>
           <button class="btn btn-default" type="button" @click="goBack">返回列表</button>
         </div>
       </template>

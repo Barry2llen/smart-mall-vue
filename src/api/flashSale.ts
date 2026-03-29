@@ -18,6 +18,7 @@ export interface SessionRelatedSkuInfoVO {
   promotionId?: string
   spuId?: string
   skuId?: string
+  randomCode?: string
   seckillPrice?: number
   seckillCount?: number
   seckillLimit?: number
@@ -46,6 +47,48 @@ export interface FlashSaleSession {
   startTime?: string
   endTime?: string
   createTime?: string
+}
+
+export interface FlashSaleOrderItem {
+  skuId: string
+  spuId: string
+  title: string
+  image: string
+  skuAttr: string[]
+  price: number
+  count: number
+  totalPrice: number
+}
+
+export interface FlashSaleMemberReceiveAddress {
+  id: string
+  memberId: string
+  name: string
+  phone: string
+  postCode: string
+  province: string
+  city: string
+  region: string
+  detailAddress: string
+  areacode: string
+  defaultStatus: number
+}
+
+export interface FlashSaleOrderConfirm {
+  addresses: FlashSaleMemberReceiveAddress[]
+  item: FlashSaleOrderItem | null
+  points: number
+  total: number
+  payTotal: number
+}
+
+export interface FlashSaleKillPayload {
+  skuId: string
+  sessionId: string
+  randomCode: string
+  num: number
+  addressId?: string
+  note?: string
 }
 
 const FLASH_SALE_API = '/flash-sale'
@@ -97,4 +140,35 @@ export function getFlashSaleSessionById(sessionId: string, withProducts = false)
       },
     },
   )
+}
+
+export function getFlashSaleOrderConfirm(
+  userId: string,
+  sessionId: string,
+  skuId: string,
+  num: number,
+) {
+  return request.get<RObject<FlashSaleOrderConfirm>, RObject<FlashSaleOrderConfirm>>(
+    `${FLASH_SALE_API}/public/flash-sale`,
+    {
+      params: {
+        userId,
+        sessionId,
+        skuId,
+        num,
+      },
+    },
+  )
+}
+
+export function submitFlashSaleOrder(userId: string, payload: FlashSaleKillPayload) {
+  return request.post<RObject, RObject>(`${FLASH_SALE_API}/public/flash-sale/kill`, payload, {
+    params: {
+      userId,
+      skuId: payload.skuId,
+      randomCode: payload.randomCode,
+      sessionId: payload.sessionId,
+      num: payload.num,
+    },
+  })
 }

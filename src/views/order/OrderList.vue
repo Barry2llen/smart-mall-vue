@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { getOrderList, type OrderListSkuItem, type OrderWithItems } from '@/api/order'
+import {
+  getOrderList,
+  redirectToOrderPay,
+  type OrderListSkuItem,
+  type OrderWithItems,
+} from '@/api/order'
 
 defineOptions({ name: 'OrderListPage' })
 
@@ -59,8 +64,15 @@ const formatDate = (dateStr?: string) => {
   })
 }
 
-const getStatusInfo = (status?: string) =>
-  statusMap[status || ''] || { label: '未知状态', class: 'status-unknown' }
+const normalizeStatus = (status?: string | number | null) => {
+  if (status === undefined || status === null || status === '') {
+    return ''
+  }
+  return String(status)
+}
+
+const getStatusInfo = (status?: string | number | null) =>
+  statusMap[normalizeStatus(status)] || { label: '未知状态', class: 'status-unknown' }
 
 const orderList = computed(() => rawOrderList.value)
 
@@ -113,12 +125,7 @@ const goDetail = (orderData: OrderWithItems) => {
 }
 
 const goPay = (orderData: OrderWithItems) => {
-  const orderSn = orderData.order.orderSn
-  const accessToken = localStorage.getItem('access_token')
-  if (accessToken) {
-    document.cookie = `access_token=${encodeURIComponent(accessToken)}; path=/`
-  }
-  window.location.href = `/api/order/public/pay/${orderSn}`
+  redirectToOrderPay(orderData.order.orderSn)
 }
 
 const viewLogistics = (orderData: OrderWithItems) => {
@@ -413,15 +420,15 @@ onBeforeUnmount(() => {
               </div>
               <div class="action-buttons">
                 <button
-                  v-if="orderData.order.status === '0'"
+                  v-if="normalizeStatus(orderData.order.status) === '0'"
                   class="btn btn-primary"
                   type="button"
                   @click="goPay(orderData)"
                 >
-                  去支付
+                  立即支付
                 </button>
                 <button
-                  v-if="orderData.order.status === '2'"
+                  v-if="normalizeStatus(orderData.order.status) === '2'"
                   class="btn btn-default"
                   type="button"
                   @click="viewLogistics(orderData)"

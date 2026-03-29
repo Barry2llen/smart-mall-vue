@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import {
   getOrderConfirm,
+  redirectToOrderPay,
   submitOrder,
   type MemberReceiveAddress,
   type OrderConfirm,
@@ -63,13 +64,7 @@ const handleSubmit = async () => {
     // 响应拦截器在 code 非 0 时已 reject，走到这里说明提交成功
     const orderSn = res.data as string
     if (orderSn) {
-      // window.location.href 不携带 Authorization header，
-      // 在跳转前将 token 写入 cookie，供后端从 cookie 读取认证信息
-      const accessToken = localStorage.getItem('access_token')
-      if (accessToken) {
-        document.cookie = `access_token=${encodeURIComponent(accessToken)}; path=/`
-      }
-      window.location.href = `/api/order/public/pay/${orderSn}`
+      redirectToOrderPay(orderSn)
     } else {
       submitError.value = '提交成功但未获取到订单号'
     }
